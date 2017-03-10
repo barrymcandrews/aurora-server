@@ -1,6 +1,6 @@
 import tkinter
 import Platform
-import logging
+from log import setup_logger
 
 RED_PIN = 5
 GREEN_PIN = 0
@@ -8,6 +8,7 @@ BLUE_PIN = 3
 
 is_a_raspberryPI = Platform.platform_detect() == 1
 is_gpio_enabled = False
+logger = setup_logger("Hardware Adapter")
 
 if is_a_raspberryPI:
     import wiringpi
@@ -15,12 +16,13 @@ else:
     # if this is not a RPi you can't run wiringpi so lets load
     # something in its place
     import wiring_pi as wiringpi
-    logging.debug("Detected: Not running on a Raspberry Pi")
+    logger.info("Detected: Not running on a Raspberry Pi")
 
 wiringpi.wiringPiSetup()
 
 
 def enable_gpio():
+    global is_gpio_enabled
     """Attempts to take hold of the gpio from wiring pi."""
 
     wiringpi.softPwmCreate(RED_PIN, 0, 100)
@@ -30,6 +32,7 @@ def enable_gpio():
 
 
 def disable_gpio():
+    global is_gpio_enabled
     """Releases hold on gpio, so other programs can use it"""
 
     wiringpi.softPwmStop(RED_PIN)
@@ -42,7 +45,15 @@ def disable_gpio():
 
 
 def set_color(color):
-    pass
+    if is_gpio_enabled:
+        if 0 <= color['red'] < 100:
+            wiringpi.softPwmWrite(RED_PIN, color['red'])
+        if 0 <= color['green'] < 100:
+            wiringpi.softPwmWrite(GREEN_PIN, color['green'])
+        if 0 <= color['blue'] < 100:
+            wiringpi.softPwmWrite(BLUE_PIN, color['blue'])
+    else:
+        logger.error("Can not write to GPIO because it is not enabled.")
 
 
 def set_fade(fade):

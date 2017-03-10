@@ -1,30 +1,49 @@
+import logging
+import sys
 from enum import Enum
 
+from log import setup_logger
+from services.StaticLightService import StaticLightService
+from services.LightshowPiService import LightshowPiService
+from services.MopidyService import MopidyService
+from services.AlertService import AlertService
 
-class Service(Enum):
+
+class ServiceType(Enum):
     STATIC_LIGHT = 0
     LIGHTSHOWPI = 1
     MOPIDY = 2
     ALERT = 3
 
-# This array stores the statuses of the four services
-# The index of each service is defined by the above enum
-# 0 - stopped, 1 - running
-service_status = [0, 0, 0, 0]
+classes = [StaticLightService, LightshowPiService, MopidyService, AlertService]
+instances = [StaticLightService(), LightshowPiService(), MopidyService(), AlertService()]
+logger = setup_logger('Service Controller')
 
 
 def setup():
-    pass
+    """Starts services that should be running initially"""
+    logger.info('Setting up services...')
+    start_service(ServiceType.STATIC_LIGHT)
+    start_service(ServiceType.ALERT)
 
 
-def start_service(service):
-    pass
+def start_service(service: ServiceType):
+    logger.info("Starting service " + service.name + "...")
+    instances[service.value] = classes[service.value]()
+    instances[service.value].start()
 
 
-def stop_service(service):
-    pass
+def stop_service(service: ServiceType):
+    logger.info("Stopping service " + service.name + "...")
+    instances[service.value].stop()
+    instances[service.value].join()
+    message = " is not responding." if instances[service.value].isAlive() else " successfully stopped."
+    logger.info(service.name + message)
 
 
-def get_service_status(service):
-    pass
+def get_service_status(service: ServiceType) -> str:
+    return 'started' if instances[service.value].isAlive() else 'stopped'
 
+
+def send_message(service: ServiceType, message):
+    instances[service.value].message(message)

@@ -90,22 +90,25 @@ def pi_version():
     # 2708 is pi 1
     # 2709 is pi 2
     # Anything else is not a pi.
-    with open('/proc/cpuinfo', 'r') as infile:
-        cpuinfo = infile.read()
-    # Match a line like 'Hardware   : BCM2709'
-    match = re.search('^Hardware\s+:\s+(\w+)$', cpuinfo,
-                      flags=re.MULTILINE | re.IGNORECASE)
-    if not match:
-        # Couldn't find the hardware, assume it isn't a pi.
-        return None
-    if match.group(1) == 'BCM2708':
-        # Pi 1
-        return 1
-    elif match.group(1) == 'BCM2709':
-        # Pi 2
-        return 2
-    else:
-        # Something else, not a pi.
+    try:
+        with open('/proc/cpuinfo', 'r') as infile:
+            cpuinfo = infile.read()
+        # Match a line like 'Hardware   : BCM2709'
+        match = re.search('^Hardware\s+:\s+(\w+)$', cpuinfo,
+                          flags=re.MULTILINE | re.IGNORECASE)
+        if not match:
+            # Couldn't find the hardware, assume it isn't a pi.
+            return None
+        if match.group(1) == 'BCM2708':
+            # Pi 1
+            return 1
+        elif match.group(1) == 'BCM2709':
+            # Pi 2
+            return 2
+        else:
+            # Something else, not a pi.
+            return None
+    except FileNotFoundError:
         return None
 
 
