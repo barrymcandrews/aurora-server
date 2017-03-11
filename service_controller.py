@@ -36,7 +36,7 @@ def start_service(service: ServiceType):
 def stop_service(service: ServiceType):
     logger.info("Stopping service " + service.name + "...")
     instances[service.value].stop()
-    instances[service.value].join()
+    instances[service.value].join(timeout=5)
     message = " is not responding." if instances[service.value].isAlive() else " successfully stopped."
     logger.info(service.name + message)
 

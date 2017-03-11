@@ -6,11 +6,11 @@ RED_PIN = 5
 GREEN_PIN = 0
 BLUE_PIN = 3
 
-is_a_raspberryPI = Platform.platform_detect() == 1
+is_a_raspberryPi = Platform.platform_detect() == 1
 is_gpio_enabled = False
 logger = setup_logger("Hardware Adapter")
 
-if is_a_raspberryPI:
+if is_a_raspberryPi:
     import wiringpi
 else:
     # if this is not a RPi you can't run wiringpi so lets load

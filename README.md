@@ -5,7 +5,9 @@ This server allows you to control an RGB LED strip, and other services on a Rasp
 ## Getting Started
 
 ### Prerequisities
+Although it may be possible to run this project on Windows, this server is designed to run on a Raspberry Pi, so it will work best on a POSIX system. (Debian, Red Hat, macOS, etc.)
 
+####Python
 Before running the project you need to install python 3. On macOS you can do this with homebrew:
 
 ```
@@ -18,6 +20,9 @@ You also need to install the `flask` and `gTTS` python packages:
 ```
 $ pip3 install flask gTTS
 ``` 
+
+####Mopidy
+This project uses the mopidy sound server to stream music from the internet. You can see instructions on how to install Mopidy [here](https://docs.mopidy.com/en/latest/installation/). Ensure that the mopidy command has been added to your system PATH variable. 
 
 ### Installation
 
