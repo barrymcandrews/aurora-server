@@ -11,6 +11,7 @@ class Service(Thread):
         self.mutex = Lock()
         self.should_stop = False
         self.message_queue = []
+        self.public_vars = {}
 
     def stop(self):
         self.mutex.acquire()
@@ -21,3 +22,11 @@ class Service(Thread):
         self.mutex.acquire()
         self.message_queue.append(payload)
         self.mutex.release()
+
+    def request(self, var_name):
+        obj = None
+        self.mutex.acquire()
+        if self.public_vars[var_name]:
+            obj = self.public_vars[var_name]
+        self.mutex.release()
+        return obj

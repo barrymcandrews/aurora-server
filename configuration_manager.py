@@ -1,5 +1,6 @@
 from configparser import RawConfigParser
 import os
+import json
 
 
 config_dir_path = os.path.dirname(os.path.realpath(__file__)) + '/config/'
@@ -46,7 +47,7 @@ class Configuration(object):
 
         sl['enabled'] = self.config.getboolean(section, 'enabled')
         sl['run_at_start'] = self.config.getboolean(section, 'run_at_start')
-        sl['initial_preset'] = self.config.get(section, 'initial_preset')
+        sl['initial_preset'] = json.loads(self.config.get(section, 'initial_preset'))
 
         self.static_light = Section(sl)
 

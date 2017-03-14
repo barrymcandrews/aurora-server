@@ -11,7 +11,7 @@ cm = configuration_manager.Configuration()
 
 class ServiceType(Enum):
     STATIC_LIGHT = 0
-    LIGHTSHOW = 1
+    LIGHT_SHOW = 1
 
 classes = [StaticLightService, LightShowService]
 instances = [Service(), Service()]
@@ -28,7 +28,7 @@ def setup():
             start_service(ServiceType.STATIC_LIGHT)
 
         if cm.light_show.run_at_start:
-            start_service(ServiceType.LIGHTSHOW)
+            start_service(ServiceType.LIGHT_SHOW)
 
 
 def start_service(service: ServiceType):
@@ -59,3 +59,7 @@ def get_service_status(service: ServiceType) -> str:
 
 def send_message(service: ServiceType, message):
     instances[service.value].message(message)
+
+
+def request_var(service: ServiceType, name):
+    instances[service.value].request(name)
