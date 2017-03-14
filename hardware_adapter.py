@@ -1,10 +1,11 @@
-import tkinter
+import math
 import Platform
 from log import setup_logger
 
-RED_PIN = 5
-GREEN_PIN = 0
-BLUE_PIN = 3
+PINS = [5, 0, 3]
+RED_PIN = PINS[0]
+GREEN_PIN = PINS[1]
+BLUE_PIN = PINS[2]
 
 is_a_raspberryPi = Platform.platform_detect() == 1
 is_gpio_enabled = False
@@ -43,6 +44,13 @@ def disable_gpio():
 
 # High Level GPIO Functions
 
+def set_pin_level(pin, value):
+    if math.isnan(value):
+        value = 0.0
+
+    if 0 <= pin <= 2:
+        wiringpi.softPwmWrite(PINS[pin], int(value * 100))
+
 
 def set_color(color):
     if is_gpio_enabled:
@@ -52,8 +60,9 @@ def set_color(color):
             wiringpi.softPwmWrite(GREEN_PIN, color['green'])
         if 0 <= color['blue'] < 100:
             wiringpi.softPwmWrite(BLUE_PIN, color['blue'])
+        logger.info('Color: ' + color['red'] + ' ' + color['green'] + ' ' + color['blue'])
     else:
-        logger.error("Can not write to GPIO because it is not enabled.")
+        logger.error('Can not write to GPIO because it is not enabled.')
 
 
 def set_fade(fade):

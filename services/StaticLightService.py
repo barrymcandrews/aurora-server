@@ -3,12 +3,14 @@ import hardware_adapter
 from log import setup_logger
 import time
 
+logger = setup_logger("Static Light Service")
+
 
 class StaticLightService(services.Service.Service):
 
     def __init__(self):
         super().__init__()
-        self.logger = setup_logger("Static Light Service")
+        self.requires_gpio = True
 
     def run(self):
         hardware_adapter.enable_gpio()
@@ -21,7 +23,7 @@ class StaticLightService(services.Service.Service):
             if next_preset is None:
                 time.sleep(.0125)
             else:
-                self.logger.info("Message Received. Type: " + next_preset['type'])
+                logger.info("Message Received. Type: " + next_preset['type'])
                 if next_preset['type'] == 'color':
                     hardware_adapter.set_color(next_preset)
                 elif next_preset['type'] == 'fade':
@@ -32,8 +34,5 @@ class StaticLightService(services.Service.Service):
             self.mutex.acquire()
             cont = not self.should_stop
             self.mutex.release()
-        self.shutdown()
-
-    def shutdown(self):
         hardware_adapter.disable_gpio()
-        self.logger.info("Thread cleanly stopped.")
+        logger.info("Thread cleanly stopped.")

@@ -6,6 +6,8 @@ class Service(Thread):
 
     def __init__(self):
         super().__init__()
+        self.daemon = True
+        self.requires_gpio = False
         self.mutex = Lock()
         self.should_stop = False
         self.message_queue = []

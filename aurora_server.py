@@ -4,6 +4,8 @@ from flask import Flask
 from flask import jsonify
 from flask import request
 import threading
+import signal
+import sys
 import service_controller as sc
 
 app = Flask(__name__)
@@ -64,5 +66,15 @@ def speech_only_alert(text):
     return 'this speaks the given text'
 
 
+def shutdown(signum, frame):
+    # restore the original signal handler as otherwise evil things will happen
+    # in raw_input when CTRL+C is pressed, and our signal handler is not re-entrant
+    signal.signal(signal.SIGINT, original_sigint)
+    for s in sc.ServiceType:
+        sc.stop_service(s)
+    sys.exit(1)
+
 if __name__ == '__main__':
-    app.run()
+    original_sigint = signal.getsignal(signal.SIGINT)
+    signal.signal(signal.SIGINT, shutdown)
+    app.run(port=5001)
