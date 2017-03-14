@@ -41,13 +41,6 @@ $ git clone https://github.com/barrymcandrews/aurora-server.git
 $ git clone git@github.com:barrymcandrews/aurora-server.git
 ```
 
-#### Dependencies
-After cloneing, run the install script to get the rest of the dependencies:
-
-```
-$ cd aurora-server
-$ ./install.sh
-```
 
 ## How to Use
 
