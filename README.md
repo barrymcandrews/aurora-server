@@ -134,16 +134,18 @@ BODY:
       },
       {
          "type":"fade",
-         "color1":{
-            "red":100,
-            "green":100,
-            "blue":50
-         },
-         "color2":{
-            "red":0,
-            "green":0,
-            "blue":0
-         }
+         "colors":[
+            {
+               "red":100,
+               "green":100,
+               "blue":50
+            },
+            {
+               "red":0,
+               "green":0,
+               "blue":0
+            }
+         ]
       }
    ]
 }
@@ -164,4 +166,4 @@ fade
 ```
 
 
-As you can see, is a much more concise way to convey light data to the server.Both of the examples above will cause the server to do the same thing.
+As you can see, Borealis is a much more concise way to convey pattern data to the server. Both of the examples above will cause the server to display the same pattern.
