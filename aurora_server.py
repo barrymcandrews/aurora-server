@@ -7,9 +7,11 @@ import threading
 import signal
 import sys
 import service_controller as sc
+import configuration_manager
 
 app = Flask(__name__)
 sc.setup()
+cm = configuration_manager.Configuration()
 
 
 @app.route('/api/v1', methods=['GET'])
@@ -77,4 +79,4 @@ def shutdown(signum, frame):
 if __name__ == '__main__':
     original_sigint = signal.getsignal(signal.SIGINT)
     signal.signal(signal.SIGINT, shutdown)
-    app.run(port=5001)
+    app.run(port=cm.core.port, host=cm.core.hostname)

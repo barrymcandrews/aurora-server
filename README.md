@@ -45,5 +45,6 @@ After cloneing, run the install script to get the rest of the dependencies:
 $ cd aurora-server
 $ ./install.sh
 ```
+##How to Use
 
- 
+##

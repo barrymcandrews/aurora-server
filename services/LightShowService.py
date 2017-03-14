@@ -9,41 +9,28 @@ from collections import deque
 import fft
 import hardware_adapter
 import services.Service
+import configuration_manager
 from log import setup_logger
 
-FIFO_PATH = '/tmp/audio'
+cm = configuration_manager.Configuration()
+
 GPIO_LEN = 3
 
-ATTENUATE_PCT = 50.
-SD_LOW = .4
-SD_HIGH = .85
-DECAY_FACTOR = 0
-DELAY = 1.0
-CHUNK_SIZE = 2048
-SAMPLE_RATE = 48000
-MIN_FREQUENCY = 20
-MAX_FREQUENCY = 15000
-CUSTOM_CHANNEL_MAPPING = 0
-CUSTOM_CHANNEL_FREQUENCIES = 0
-INPUT_CHANNELS = 2
-
-hardware_adapter.enable_gpio()
-
 config_path = os.path.dirname(os.path.realpath(__file__)) + '/../config/mopidy.conf'
-logger = setup_logger("Mopidy Controller")
+logger = setup_logger("Light Show Service")
 decay = np.zeros(GPIO_LEN, dtype='float32')
 
-if os.path.exists(FIFO_PATH):
-    os.remove(FIFO_PATH)
-os.mkfifo(FIFO_PATH, 0o0777)
+if os.path.exists(cm.light_show.fifo_path):
+    os.remove(cm.light_show.fifo_path)
+os.mkfifo(cm.light_show.fifo_path, 0o0777)
 
-fft_calc = fft.FFT(CHUNK_SIZE,
-                   SAMPLE_RATE,
+fft_calc = fft.FFT(cm.light_show.chunk_size,
+                   cm.light_show.sample_rate,
                    GPIO_LEN,
-                   MIN_FREQUENCY,
-                   MAX_FREQUENCY,
-                   CUSTOM_CHANNEL_MAPPING,
-                   CUSTOM_CHANNEL_FREQUENCIES,
+                   cm.light_show.min_frequency,
+                   cm.light_show.max_frequency,
+                   cm.light_show.custom_channel_mapping,
+                   cm.light_show.custom_channel_frequencies,
                    1)
 
 
@@ -55,13 +42,15 @@ class LightShowService(services.Service.Service):
         self.process = None
 
     def run(self):
+        hardware_adapter.enable_gpio()
         self.process = subprocess.Popen(['mopidy', '--config', config_path],
                                         stdout=subprocess.PIPE,
                                         stdin=subprocess.PIPE,
                                         preexec_fn=os.setsid)
 
-        chunks_per_sec = ((16 * INPUT_CHANNELS * SAMPLE_RATE) / 8) / CHUNK_SIZE
-        light_delay = int(DELAY * chunks_per_sec)
+        chunks_per_sec = ((16 * cm.light_show.input_channels * cm.light_show.sample_rate) / 8) \
+            / cm.light_show.chunk_size
+        light_delay = int(cm.light_show.delay * chunks_per_sec)
         matrix_buffer = deque([], 1000)
 
         mean = np.array([12.0 for _ in range(GPIO_LEN)], dtype='float32')
@@ -70,12 +59,11 @@ class LightShowService(services.Service.Service):
         running_stats = RunningStats.Stats(GPIO_LEN)
         running_stats.preload(mean, std, GPIO_LEN)
 
-        file = os.open(FIFO_PATH, os.O_RDONLY | os.O_NONBLOCK)
+        file = os.open(cm.light_show.fifo_path, os.O_RDONLY | os.O_NONBLOCK)
 
         while True:
-
             try:
-                data = os.read(file, CHUNK_SIZE)
+                data = os.read(file, cm.light_show.chunk_size)
 
             except OSError as err:
                 if err.errno == errno.EAGAIN or err.errno == errno.EWOULDBLOCK:
@@ -106,7 +94,7 @@ class LightShowService(services.Service.Service):
                 break
             self.mutex.release()
         self.process.terminate()
-        os.unlink(FIFO_PATH)
+        os.unlink(cm.light_show.fifo_path)
         hardware_adapter.disable_gpio()
 
 
@@ -127,19 +115,20 @@ def update_lights(matrix, mean, std):
     """
     global decay
 
-    brightness = matrix - mean + (std * SD_LOW)
-    brightness = (brightness / (std * (SD_LOW + SD_HIGH))) * \
-                 (1.0 - (ATTENUATE_PCT / 100.0))
+    brightness = matrix - mean + (std * cm.light_show.SD_low)
+    brightness = (brightness / (std * (cm.light_show.SD_low + cm.light_show.SD_high))) * \
+                 (1.0 - (cm.light_show.attenuate_pct / 100.0))
 
     # insure that the brightness levels are in the correct range
     brightness = np.clip(brightness, 0.0, 1.0)
     brightness = np.round(brightness, decimals=3)
 
     # calculate light decay rate if used
-    if DECAY_FACTOR > 0:
+    decay_factor = cm.light_show.decay_factor
+    if decay_factor > 0:
         decay = np.where(decay <= brightness, brightness, decay)
-        brightness = np.where(decay - DECAY_FACTOR > 0, decay - DECAY_FACTOR, brightness)
-        decay = np.where(decay - DECAY_FACTOR > 0, decay - DECAY_FACTOR, decay)
+        brightness = np.where(decay - decay_factor > 0, decay - decay_factor, brightness)
+        decay = np.where(decay - decay_factor > 0, decay - decay_factor, decay)
 
     for blevel, pin in zip(brightness, range(GPIO_LEN)):
             hardware_adapter.set_pin_level(pin, blevel)

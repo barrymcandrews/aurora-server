@@ -1,26 +1,34 @@
 from enum import Enum
 
+import configuration_manager
 from log import setup_logger
 from services.Service import Service
 from services.StaticLightService import StaticLightService
 from services.LightShowService import LightShowService
-from services.AlertService import AlertService
+
+cm = configuration_manager.Configuration()
 
 
 class ServiceType(Enum):
     STATIC_LIGHT = 0
     LIGHTSHOW = 1
-    ALERT = 2
 
-classes = [StaticLightService, LightShowService, AlertService]
-instances = [Service(), Service(), Service()]
+classes = [StaticLightService, LightShowService]
+instances = [Service(), Service()]
 logger = setup_logger('Service Controller')
 
 
 def setup():
     """Starts services that should be running initially"""
     logger.info('Setting up services...')
-    start_service(ServiceType.LIGHTSHOW)
+    if cm.light_show.run_at_start and cm.static_light.run_at_start:
+        logger.error("Config Error: Static Light and Light Show can not run at the same time.")
+    else:
+        if cm.static_light.run_at_start:
+            start_service(ServiceType.STATIC_LIGHT)
+
+        if cm.light_show.run_at_start:
+            start_service(ServiceType.LIGHTSHOW)
 
 
 def start_service(service: ServiceType):

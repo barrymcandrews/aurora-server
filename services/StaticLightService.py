@@ -14,8 +14,7 @@ class StaticLightService(services.Service.Service):
 
     def run(self):
         hardware_adapter.enable_gpio()
-        cont = True
-        while cont:
+        while True:
             self.mutex.acquire()
             next_preset = None if len(self.message_queue) == 0 else self.message_queue.pop()
             self.mutex.release()
@@ -32,7 +31,8 @@ class StaticLightService(services.Service.Service):
                     hardware_adapter.set_sequence(next_preset)
 
             self.mutex.acquire()
-            cont = not self.should_stop
+            if self.should_stop:
+                break
             self.mutex.release()
         hardware_adapter.disable_gpio()
         logger.info("Thread cleanly stopped.")
