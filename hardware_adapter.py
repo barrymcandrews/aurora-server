@@ -1,6 +1,7 @@
 import math
 import Platform
 from log import setup_logger
+from time import sleep
 
 PINS = [5, 0, 3]
 RED_PIN = PINS[0]
@@ -43,6 +44,12 @@ def disable_gpio():
 
 
 # High Level GPIO Functions
+def set_off():
+    if is_gpio_enabled:
+        wiringpi.softPwmCreate(RED_PIN, 0, 100)
+        wiringpi.softPwmCreate(GREEN_PIN, 0, 100)
+        wiringpi.softPwmCreate(BLUE_PIN, 0, 100)
+
 
 def set_pin_level(pin, value):
     if math.isnan(value):
@@ -52,22 +59,78 @@ def set_pin_level(pin, value):
         wiringpi.softPwmWrite(PINS[pin], int(value * 100))
 
 
+def set_rgb(red, green, blue):
+    if is_gpio_enabled:
+        if 0 <= red < 100:
+            wiringpi.softPwmWrite(RED_PIN, red)
+        if 0 <= green < 100:
+            wiringpi.softPwmWrite(GREEN_PIN, green)
+        if 0 <= blue < 100:
+            wiringpi.softPwmWrite(BLUE_PIN, blue)
+    else:
+        logger.error('Can not write to GPIO because it is not enabled.')
+
+
 def set_color(color):
     if is_gpio_enabled:
-        if 0 <= color['red'] < 100:
+        if 'red' in color and 0 <= color['red'] < 100:
             wiringpi.softPwmWrite(RED_PIN, color['red'])
-        if 0 <= color['green'] < 100:
+        if 'green' in color and 0 <= color['green'] < 100:
             wiringpi.softPwmWrite(GREEN_PIN, color['green'])
-        if 0 <= color['blue'] < 100:
+        if 'blue' in color and 0 <= color['blue'] < 100:
             wiringpi.softPwmWrite(BLUE_PIN, color['blue'])
-        logger.info('Color: ' + color['red'] + ' ' + color['green'] + ' ' + color['blue'])
     else:
         logger.error('Can not write to GPIO because it is not enabled.')
 
 
 def set_fade(fade):
-    pass
+    if is_gpio_enabled:
+        delay = 1 if 'delay' not in fade else fade['delay']
+        colors = [] if 'colors' not in fade else fade['colors']
+
+        num_loops = len(colors) - 1
+        if num_loops > 0:
+            for i in range(0, num_loops, 1):
+                nextcolor = i + 1 if i < len(colors) - 1 else 0
+
+                red = colors[i]['red']
+                green = colors[i]['green']
+                blue = colors[i]['blue']
+                delta_r = colors[nextcolor]['red'] - red
+                delta_g = colors[nextcolor]['green'] - green
+                delta_b = colors[nextcolor]['blue'] - blue
+                num_changes = max(abs(delta_r), abs(delta_g), abs(delta_b))
+
+                if num_changes == 0:
+                    continue
+                pause_time = delay / num_changes
+
+                for j in range(0, num_changes):
+                    if not red == colors[nextcolor]['red']:
+                        red += int(delta_r / abs(delta_r))
+                    if not green == colors[nextcolor]['green']:
+                        green += int(delta_g / abs(delta_g))
+                    if not blue == colors[nextcolor]['blue']:
+                        blue += int(delta_b / abs(delta_b))
+                    set_rgb(red, green, blue)
+                    sleep(pause_time)
+    else:
+        logger.error('Can not write to GPIO because it is not enabled.')
 
 
 def set_sequence(sequence):
-    pass
+    if is_gpio_enabled:
+        delay = 1 if 'delay' not in sequence else sequence['delay']
+        presets = [] if 'sequence' not in sequence else sequence['sequence']
+        for effect in presets:
+            if 'type' not in effect:
+                continue
+            elif effect['type'] == 'solid':
+                set_color(effect)
+                sleep(delay)
+            elif effect['type'] == 'fade':
+                set_fade(effect)
+            elif effect['type'] == 'sequence':
+                set_sequence(effect)
+    else:
+        logger.error('Can not write to GPIO because it is not enabled.')

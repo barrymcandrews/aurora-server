@@ -8,6 +8,7 @@ import signal
 import sys
 import service_controller as sc
 import configuration_manager
+import bor_parser as bor
 
 app = Flask(__name__)
 sc.setup()
@@ -20,7 +21,7 @@ def api_docs():
     return jsonify({'message': 'The api docs will eventually be here.'})
 
 
-@app.route('/api/v1/service', methods=['GET'])
+@app.route('/api/v1/services', methods=['GET'])
 def list_services():
     """returns a json array with all the statuses of the services"""
     services = []
@@ -31,7 +32,7 @@ def list_services():
     return jsonify({'services': services, 'active-threads': at})
 
 
-@app.route('/api/v1/service/<name>', methods=['GET', 'POST'])
+@app.route('/api/v1/services/<name>', methods=['GET', 'POST'])
 def list_service(name):
     """returns the status of the specific service"""
     name = name.upper()
@@ -53,19 +54,22 @@ def list_service(name):
 
 @app.route('/api/v1/s/static-light', methods=['GET', 'POST'])
 def static_light():
-    if request.method == 'POST' and request.json is not None:
-        sc.send_message(ServiceType.STATIC_LIGHT, request.json)
-    return 'this controls static light'
+    if request.method == 'POST':
+        if request.headers['Content-Type'].lower() == "application/borealis":
+            req = bor.parse(request.get_data().decode('utf-8'))
+        elif request.headers['Content-Type'].lower() == "application/json":
+            req = request.get_json()
+        else:
+            res = jsonify({
+                'type': 'UnknownContentTypeException',
+                'message': 'The server does not recognize the content-type you sent.'
+            })
+            res.status_code = 400
+            return res
 
+        sc.send_message(ServiceType.STATIC_LIGHT, req)
 
-@app.route('/api/v1/s/alert')
-def alert():
-    return 'this controls alerts'
-
-
-@app.route('/api/v1/s/alert/speech/<text>')
-def speech_only_alert(text):
-    return 'this speaks the given text'
+    return sc.request_var(ServiceType.STATIC_LIGHT, 'current_preset')
 
 
 def shutdown(signum, frame):
