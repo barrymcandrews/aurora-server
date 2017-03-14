@@ -3,8 +3,9 @@
 This server allows you to control an RGB LED strip connected to a Raspberry Pi ([like this setup](http://dordnung.de/raspberrypi-ledstrip/)) through a RESTful API.
 ###About
 The server has two main functions:
+
 1. Static Light
-	* This Displays solid colors, fading colors, and sequences containing solid and fading colors.
+	* This displays solid colors, fading colors, and sequences containing both solid and fading colors.
 2. Light Show (based on [LightshowPi](lightshowpi.org))
 	* This uses spectrum analysis to generate colors from music.
 	* The music plays through a program called [Mopidy](https://www.mopidy.com/) which can be configured to stream from services like Spotify, SoundCloud, and Google Play.
