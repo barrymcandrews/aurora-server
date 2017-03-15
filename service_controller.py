@@ -62,4 +62,4 @@ def send_message(service: ServiceType, message):
 
 
 def request_var(service: ServiceType, name):
-    instances[service.value].request(name)
+    return instances[service.value].request(name)

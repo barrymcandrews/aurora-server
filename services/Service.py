@@ -26,7 +26,7 @@ class Service(Thread):
     def request(self, var_name):
         obj = None
         self.mutex.acquire()
-        if self.public_vars[var_name]:
+        if var_name in self.public_vars:
             obj = self.public_vars[var_name]
         self.mutex.release()
         return obj

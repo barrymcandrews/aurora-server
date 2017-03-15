@@ -68,8 +68,8 @@ def static_light():
             return res
 
         sc.send_message(ServiceType.STATIC_LIGHT, req)
-
-    return sc.request_var(ServiceType.STATIC_LIGHT, 'current_preset')
+        return jsonify(req)
+    return jsonify(sc.request_var(ServiceType.STATIC_LIGHT, 'current_preset'))
 
 
 def shutdown(signum, frame):
