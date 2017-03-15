@@ -35,7 +35,7 @@ class StaticLightService(services.Service.Service):
                     elif next_preset['type'] == 'none':
                         hardware_adapter.set_off()
                 elif next_preset['type'] == 'fade':
-                    hardware_adapter.set_fade(next_preset)
+                    hardware_adapter.set_fade(next_preset, self.check_cont)
                 elif next_preset['type'] == 'sequence':
                     hardware_adapter.set_sequence(next_preset, self.check_cont)
 
@@ -52,6 +52,6 @@ class StaticLightService(services.Service.Service):
 
     def check_cont(self):
         self.mutex.acquire()
-        cont = not self.should_stop
+        cont = (not self.should_stop) and (len(self.message_queue) == 0)
         self.mutex.release()
         return cont
