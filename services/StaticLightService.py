@@ -17,6 +17,7 @@ class StaticLightService(services.Service.Service):
     def run(self):
         hardware_adapter.enable_gpio()
         next_preset = None
+        current_preset = None
 
         self.mutex.acquire()
         self.message_queue.append(cm.static_light.initial_preset)
@@ -28,19 +29,19 @@ class StaticLightService(services.Service.Service):
             self.mutex.release()
 
             if 'type' in next_preset:
-                if next_preset['type'] == 'color':
-                    hardware_adapter.set_color(next_preset)
+                if next_preset != current_preset:
+                    if next_preset['type'] == 'color':
+                        hardware_adapter.set_color(next_preset)
+                    elif next_preset['type'] == 'none':
+                        hardware_adapter.set_off()
                 elif next_preset['type'] == 'fade':
                     hardware_adapter.set_fade(next_preset)
                 elif next_preset['type'] == 'sequence':
-                    hardware_adapter.set_sequence(next_preset)
-                elif next_preset['type'] == 'none':
-                    hardware_adapter.set_off()
+                    hardware_adapter.set_sequence(next_preset, self.check_cont)
+
                 self.mutex.acquire()
-                self.public_vars['current_preset'] = next_preset
+                self.public_vars['current_preset'] = current_preset = next_preset
                 self.mutex.release()
-            else:
-                time.sleep(.0125)
 
             self.mutex.acquire()
             if self.should_stop:
@@ -49,3 +50,8 @@ class StaticLightService(services.Service.Service):
         hardware_adapter.disable_gpio()
         logger.info("Thread cleanly stopped.")
 
+    def check_cont(self):
+        self.mutex.acquire()
+        cont = not self.should_stop
+        self.mutex.release()
+        return cont
