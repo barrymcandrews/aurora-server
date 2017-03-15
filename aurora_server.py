@@ -56,7 +56,15 @@ def list_service(name):
 def static_light():
     if request.method == 'POST':
         if request.headers['Content-Type'].lower() == "application/borealis":
-            req = bor.parse(request.get_data().decode('utf-8'))
+            try:
+                req = bor.parse(request.get_data().decode('utf-8'))
+            except bor.BorSyntaxException as e:
+                res = jsonify({
+                    'type': 'BorSyntaxException',
+                    'message': 'The body you sent does not follow Borealis syntax.'
+                })
+                res.status_code = 400
+                return res
         elif request.headers['Content-Type'].lower() == "application/json":
             req = request.get_json()
         else:

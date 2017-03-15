@@ -114,6 +114,8 @@ def set_fade(fade, continue_func=(lambda: True)):
                         blue += int(delta_b / abs(delta_b))
                     set_rgb(red, green, blue)
                     sleep(pause_time)
+                    if not continue_func():
+                        break
     else:
         logger.error('Can not write to GPIO because it is not enabled.')
 
@@ -126,12 +128,12 @@ def set_sequence(sequence, continue_func=(lambda: True)):
             cont = continue_func()
             if 'type' not in effect:
                 continue
-            elif cont and effect['type'] == 'solid':
+            elif cont and effect['type'] == 'color':
                 set_color(effect)
                 sleep(delay)
             elif cont and effect['type'] == 'fade':
-                set_fade(effect)
+                set_fade(effect, continue_func)
             elif cont and effect['type'] == 'sequence':
-                set_sequence(effect)
+                set_sequence(effect, continue_func)
     else:
         logger.error('Can not write to GPIO because it is not enabled.')

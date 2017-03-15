@@ -19,8 +19,8 @@ def parse(file):
             try:
                 delay = float(line[7:].strip())
             except ValueError:
-                print("Syntax Error on line: '" + line + "'")
-                print("Value cannot be converted to 'float'")
+                print('Syntax Error on line: "' + line + '"')
+                print('Value cannot be converted to "float"')
 
     return build_sequence(interpret(file.splitlines()), delay)
 
@@ -32,38 +32,38 @@ def interpret(rows):
 
     while lines.peek() is not None:
         line = lines.next()
-        if line.startswith("#"):
+        if line.startswith('#'):
             continue
 
         elements = line.split(' ')
-        if len(elements) == 4 and elements[0] == "set":
-            pattern.append(build_solid(elements[1], elements[2], elements[3]))
-        elif elements[0].startswith("sequence") or elements[0].startswith("fade"):
+        if len(elements) == 4 and elements[0] == 'set':
+            pattern.append(build_color(elements[1], elements[2], elements[3]))
+        elif elements[0].startswith('sequence') or elements[0].startswith('fade'):
             indented_lines = []
             while lines.peek() is not None and lines.peek().startswith("\t"):
                 indented_lines.append(lines.next()[1:])
 
-            if "(" in elements[0] and ")" in elements[0]:
-                newdelay = elements[0][elements[0].index("(") + 1:elements[0].index(")")]
-                delay = int(newdelay) if newdelay.isdigit() else delay
+            if '(' in elements[0] and ')' in elements[0]:
+                newdelay = elements[0][elements[0].index('(') + 1:elements[0].index(')')]
+                delay = float(newdelay) if newdelay.replace('.', '', 1).isdigit() else delay
 
-            if elements[0].startswith("sequence"):
+            if elements[0].startswith('sequence'):
                     new_elements = build_sequence(interpret(indented_lines), delay)
             else:
                 new_elements = build_fade(interpret(indented_lines), delay)
             pattern.append(new_elements)
         else:
-            print("Syntax Error on line: '" + line + "'")
+            print('Syntax Error on line: "' + line + '"')
             raise BorSyntaxException
     return pattern
 
 
-def build_solid(red, green, blue):
+def build_color(red, green, blue):
     return {
-        "type": "solid",
-        "red": int(red),
-        "green": int(green),
-        "blue": int(blue)
+        'type': 'color',
+        'red': int(red),
+        'green': int(green),
+        'blue': int(blue)
     }
 
 
@@ -80,9 +80,9 @@ def build_fade(colors, delay):
     for c in colors:
         stripped.append(c)
     return {
-        "type": "fade",
-        "delay": delay,
-        "colors": stripped
+        'type': 'fade',
+        'delay': delay,
+        'colors': stripped
     }
 
 
@@ -124,4 +124,4 @@ if __name__ == '__main__' and len(sys.argv) == 3:
     try:
         outfile.write(json.dumps(parse(infile.read())))
     except BorSyntaxException:
-        print("Syntax incorrect file not saved.")
+        print('Syntax incorrect file not saved.')
