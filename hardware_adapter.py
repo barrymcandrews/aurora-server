@@ -3,7 +3,7 @@ import Platform
 from log import setup_logger
 from time import sleep
 
-PINS = [5, 0, 3]
+PINS = [0, 5, 3]
 RED_PIN = PINS[0]
 GREEN_PIN = PINS[1]
 BLUE_PIN = PINS[2]
@@ -46,9 +46,9 @@ def disable_gpio():
 # High Level GPIO Functions
 def set_off():
     if is_gpio_enabled:
-        wiringpi.softPwmCreate(RED_PIN, 0, 100)
-        wiringpi.softPwmCreate(GREEN_PIN, 0, 100)
-        wiringpi.softPwmCreate(BLUE_PIN, 0, 100)
+        wiringpi.softPwmWrite(RED_PIN, 0)
+        wiringpi.softPwmWrite(GREEN_PIN, 0)
+        wiringpi.softPwmWrite(BLUE_PIN, 0)
 
 
 def set_pin_level(pin, value):
@@ -73,17 +73,17 @@ def set_rgb(red, green, blue):
 
 def set_color(color):
     if is_gpio_enabled:
-        if 'red' in color and 0 <= color['red'] < 100:
+        if 'red' in color and 0 <= color['red'] <= 100:
             wiringpi.softPwmWrite(RED_PIN, color['red'])
-        if 'green' in color and 0 <= color['green'] < 100:
+        if 'green' in color and 0 <= color['green'] <= 100:
             wiringpi.softPwmWrite(GREEN_PIN, color['green'])
-        if 'blue' in color and 0 <= color['blue'] < 100:
+        if 'blue' in color and 0 <= color['blue'] <= 100:
             wiringpi.softPwmWrite(BLUE_PIN, color['blue'])
     else:
         logger.error('Can not write to GPIO because it is not enabled.')
 
 
-def set_fade(fade):
+def set_fade(fade, continue_func=(lambda: True)):
     if is_gpio_enabled:
         delay = 1 if 'delay' not in fade else fade['delay']
         colors = [] if 'colors' not in fade else fade['colors']
@@ -118,19 +118,20 @@ def set_fade(fade):
         logger.error('Can not write to GPIO because it is not enabled.')
 
 
-def set_sequence(sequence):
+def set_sequence(sequence, continue_func=(lambda: True)):
     if is_gpio_enabled:
         delay = 1 if 'delay' not in sequence else sequence['delay']
         presets = [] if 'sequence' not in sequence else sequence['sequence']
         for effect in presets:
+            cont = continue_func()
             if 'type' not in effect:
                 continue
-            elif effect['type'] == 'solid':
+            elif cont and effect['type'] == 'solid':
                 set_color(effect)
                 sleep(delay)
-            elif effect['type'] == 'fade':
+            elif cont and effect['type'] == 'fade':
                 set_fade(effect)
-            elif effect['type'] == 'sequence':
+            elif cont and effect['type'] == 'sequence':
                 set_sequence(effect)
     else:
         logger.error('Can not write to GPIO because it is not enabled.')

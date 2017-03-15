@@ -38,18 +38,18 @@ def interpret(rows):
         elements = line.split(' ')
         if len(elements) == 4 and elements[0] == "set":
             pattern.append(build_solid(elements[1], elements[2], elements[3]))
-        elif elements[0].startswith("pattern") or elements[0].startswith("fade"):
+        elif elements[0].startswith("sequence") or elements[0].startswith("fade"):
             indented_lines = []
             while lines.peek() is not None and lines.peek().startswith("\t"):
                 indented_lines.append(lines.next()[1:])
 
-            if elements[0].startswith("pattern"):
-                # parse for inner delay here
-                new_elements = build_sequence(interpret(indented_lines), delay)
+            if "(" in elements[0] and ")" in elements[0]:
+                newdelay = elements[0][elements[0].index("(") + 1:elements[0].index(")")]
+                delay = int(newdelay) if newdelay.isdigit() else delay
+
+            if elements[0].startswith("sequence"):
+                    new_elements = build_sequence(interpret(indented_lines), delay)
             else:
-                if "(" in elements[0] and ")" in elements[0]:
-                    newdelay = elements[0][elements[0].index("(") + 1:elements[0].index(")")]
-                    delay = int(newdelay) if newdelay.isdigit() else delay
                 new_elements = build_fade(interpret(indented_lines), delay)
             pattern.append(new_elements)
         else:
@@ -78,7 +78,7 @@ def build_sequence(sequence, delay):
 def build_fade(colors, delay):
     stripped = []
     for c in colors:
-        stripped.append(c['color'])
+        stripped.append(c)
     return {
         "type": "fade",
         "delay": delay,
