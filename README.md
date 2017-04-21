@@ -101,7 +101,7 @@ HEADERS:
 	Content-Type: application/json
 BODY:
 {
-   "type":"solid",
+   "type":"color",
    "red":0,
    "green":0,
    "blue":100
@@ -120,7 +120,7 @@ BODY:
    "type":"sequence",
    "sequence":[
       {
-         "type":"solid",
+         "type":"color",
          "red":100,
          "green":0,
          "blue":50
