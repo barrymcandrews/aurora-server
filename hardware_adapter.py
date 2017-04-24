@@ -123,17 +123,20 @@ def set_fade(fade, continue_func=(lambda: True)):
 def set_sequence(sequence, continue_func=(lambda: True)):
     if is_gpio_enabled:
         delay = 1 if 'delay' not in sequence else sequence['delay']
+        repeats = 1 if 'repeat' not in sequence else sequence['repeat']
         presets = [] if 'sequence' not in sequence else sequence['sequence']
-        for effect in presets:
-            cont = continue_func()
-            if 'type' not in effect:
-                continue
-            elif cont and effect['type'] == 'color':
-                set_color(effect)
-                sleep(delay)
-            elif cont and effect['type'] == 'fade':
-                set_fade(effect, continue_func)
-            elif cont and effect['type'] == 'sequence':
-                set_sequence(effect, continue_func)
+        while repeats > 0:
+            for effect in presets:
+                cont = continue_func()
+                if 'type' not in effect:
+                    continue
+                elif cont and effect['type'] == 'color':
+                    set_color(effect)
+                    sleep(delay)
+                elif cont and effect['type'] == 'fade':
+                    set_fade(effect, continue_func)
+                elif cont and effect['type'] == 'sequence':
+                    set_sequence(effect, continue_func)
+            repeats -= 1
     else:
         logger.error('Can not write to GPIO because it is not enabled.')
