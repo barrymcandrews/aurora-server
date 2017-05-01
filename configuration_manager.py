@@ -28,6 +28,7 @@ class Configuration(object):
 
         core['port'] = self.config.getint(section, 'port')
         core['hostname'] = self.config.get(section, 'hostname')
+        core['start_messaged_service'] = self.config.getboolean(section, 'start_messaged_service')
 
         self.core = Section(core)
 

@@ -75,6 +75,7 @@ def static_light():
             res.status_code = 400
             return res
 
+        app.logger.info("About to send the message!")
         sc.send_message(ServiceType.STATIC_LIGHT, req)
         return jsonify(req)
     return jsonify(sc.request_var(ServiceType.STATIC_LIGHT, 'current_preset'))

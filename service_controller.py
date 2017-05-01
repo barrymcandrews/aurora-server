@@ -48,7 +48,7 @@ def stop_service(service: ServiceType):
     if instances[service.value].isAlive():
         logger.info("Stopping service " + service.name + "...")
         instances[service.value].stop()
-        instances[service.value].join(timeout=5)
+        instances[service.value].join(timeout=1000)
         message = " is not responding." if instances[service.value].isAlive() else " successfully stopped."
         logger.info(service.name + message)
 
@@ -58,7 +58,15 @@ def get_service_status(service: ServiceType) -> str:
 
 
 def send_message(service: ServiceType, message):
-    instances[service.value].message(message)
+    if not instances[service.value].isAlive():
+        if cm.core.start_messaged_service:
+            logger.info("Service: " + service.name + " was not already running. Starting it.")
+            start_service(service)
+        else:
+            logger.info("Service: " + service.name + " is not started.")
+
+    if instances[service.value].isAlive():
+        instances[service.value].message(message)
 
 
 def request_var(service: ServiceType, name):

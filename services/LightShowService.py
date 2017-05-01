@@ -1,4 +1,5 @@
 import subprocess
+import signal
 import audioop
 import os
 import numpy as np
@@ -19,11 +20,6 @@ GPIO_LEN = 3
 config_path = os.path.dirname(os.path.realpath(__file__)) + '/../config/mopidy.conf'
 logger = setup_logger("Light Show Service")
 decay = np.zeros(GPIO_LEN, dtype='float32')
-
-if os.path.exists(cm.light_show.fifo_path):
-    os.remove(cm.light_show.fifo_path)
-os.mkfifo(cm.light_show.fifo_path, 0o0777)
-
 fft_calc = fft.FFT(cm.light_show.chunk_size,
                    cm.light_show.sample_rate,
                    GPIO_LEN,
@@ -43,6 +39,7 @@ class LightShowService(services.Service.Service):
 
     def run(self):
         hardware_adapter.enable_gpio()
+        setup_fifo()
         self.process = subprocess.Popen(['mopidy', '--config', config_path],
                                         stdout=subprocess.PIPE,
                                         stdin=subprocess.PIPE,
@@ -93,9 +90,17 @@ class LightShowService(services.Service.Service):
             if self.should_stop:
                 break
             self.mutex.release()
-        self.process.terminate()
+
+        os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)
+        self.process.wait()
         os.unlink(cm.light_show.fifo_path)
         hardware_adapter.disable_gpio()
+
+
+def setup_fifo():
+    if os.path.exists(cm.light_show.fifo_path):
+        os.remove(cm.light_show.fifo_path)
+    os.mkfifo(cm.light_show.fifo_path, 0o0777)
 
 
 def update_lights(matrix, mean, std):
