@@ -2,9 +2,8 @@ import services.Service
 import hardware_adapter
 import configuration_manager
 from log import setup_logger
-import time
 
-logger = setup_logger("Static Light Service")
+logger = setup_logger('Static Light Service')
 cm = configuration_manager.Configuration()
 
 

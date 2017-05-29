@@ -2,8 +2,8 @@
 <project version="4">
   <component name="WebServers">
     <option name="servers">
-      <webServer id="ssh://pi@150.212.207.212:22/usr/bin/python3" name="ssh://root@150.212.207.212:22/usr/bin/python3" url="http://150.212.202.186">
-        <fileTransfer host="150.212.202.186" port="22" accessType="SFTP">
+      <webServer id="ssh://pi@150.212.207.212:22/usr/bin/python3" name="ssh://root@hyperion:22/usr/bin/python3" url="http://hyperion">
+        <fileTransfer host="hyperion" port="22" accessType="SFTP">
           <option name="port" value="22" />
         </fileTransfer>
       </webServer>

@@ -70,4 +70,4 @@ def send_message(service: ServiceType, message):
 
 
 def request_var(service: ServiceType, name):
-    return instances[service.value].request(name)
+    return instances[service.value].request(name) if instances[service.value].isAlive() else None

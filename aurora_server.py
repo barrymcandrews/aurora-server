@@ -9,8 +9,10 @@ import sys
 import service_controller as sc
 import configuration_manager
 import bor_parser as bor
+import setproctitle
 
 app = Flask(__name__)
+setproctitle.setproctitle('aurora-server')
 sc.setup()
 cm = configuration_manager.Configuration()
 
@@ -92,4 +94,5 @@ def shutdown(signum, frame):
 if __name__ == '__main__':
     original_sigint = signal.getsignal(signal.SIGINT)
     signal.signal(signal.SIGINT, shutdown)
+    signal.signal(signal.SIGTERM, shutdown)
     app.run(port=cm.core.port, host=cm.core.hostname)
