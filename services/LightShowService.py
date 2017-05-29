@@ -64,6 +64,10 @@ class LightShowService(services.Service.Service):
 
             except OSError as err:
                 if err.errno == errno.EAGAIN or err.errno == errno.EWOULDBLOCK:
+                    self.mutex.acquire()
+                    if self.should_stop:
+                        break
+                    self.mutex.release()
                     continue
 
             if len(data):
