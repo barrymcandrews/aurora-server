@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 from service_controller import ServiceType
-from flask import Flask
-from flask import jsonify
-from flask import request
+from sanic import Sanic
+from sanic.response import json
 import threading
 import signal
 import sys
@@ -11,16 +10,39 @@ import configuration_manager
 import bor_parser as bor
 import setproctitle
 
-app = Flask(__name__)
+app = Sanic(__name__)
 setproctitle.setproctitle('aurora-server')
 sc.setup()
 cm = configuration_manager.Configuration()
 
 
-@app.route('/api/v1', methods=['GET'])
-def api_docs():
+@app.route('/api/v2', methods=['GET'])
+async def server_info():
     """returns the api docs"""
-    return jsonify({'message': 'The api docs will eventually be here.'})
+    return json({'name': 'aurora-server',
+                 'version': '2.0',
+                 'author': 'M. Barry McAndrews'
+                 })
+
+
+@app.route('/api/v2/lights', methods=['GET'])
+async def lights(request):
+    pass
+
+
+@app.route('/api/v2/lights/<name:[A-z]>', methods=['GET', 'POST'])
+async def lights(request, name):
+    pass
+
+
+@app.route('/api/v2/music', methods=['GET'])
+async def lights(request):
+    pass
+
+
+@app.route('/api/v2/music/<name:[A-z]>', methods=['GET', 'POST'])
+async def music(request, name):
+    pass
 
 
 @app.route('/api/v1/services', methods=['GET'])
@@ -31,7 +53,7 @@ def list_services():
         services.append({'name': s.name, 'status': sc.get_service_status(s)})
     at = threading.active_count()
 
-    return jsonify({'services': services, 'active-threads': at})
+    return json({'services': services, 'active-threads': at})
 
 
 @app.route('/api/v1/services/<name>', methods=['GET', 'POST'])
@@ -70,7 +92,7 @@ def static_light():
         elif request.headers['Content-Type'].lower() == "application/json":
             req = request.get_json()
         else:
-            res = jsonify({
+            res = json({
                 'type': 'UnknownContentTypeException',
                 'message': 'The server does not recognize the content-type you sent.'
             })
@@ -79,8 +101,8 @@ def static_light():
 
         app.logger.info("About to send the message!")
         sc.send_message(ServiceType.STATIC_LIGHT, req)
-        return jsonify(req)
-    return jsonify(sc.request_var(ServiceType.STATIC_LIGHT, 'current_preset'))
+        return json(req)
+    return json(sc.request_var(ServiceType.STATIC_LIGHT, 'current_preset'))
 
 
 def shutdown(signum, frame):
