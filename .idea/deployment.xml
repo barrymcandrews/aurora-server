@@ -5,7 +5,7 @@
       <paths name="ssh://root@hyperion:22/usr/bin/python3">
         <serverdata>
           <mappings>
-            <mapping deploy="/opt/aurora-server" local="$PROJECT_DIR$" web="150.212.207.212" />
+            <mapping deploy="/opt/aurora-server-beta" local="$PROJECT_DIR$" web="150.212.207.212" />
           </mappings>
         </serverdata>
       </paths>
