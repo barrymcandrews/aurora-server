@@ -22,11 +22,12 @@ numpy: for array support - http://www.numpy.org/
 rpi-audio-levels - https://bitbucket.org/tom_slick/rpi-audio-levels (modified for lightshowpi)
 """
 
-from numpy import *
 import math
-from log import setup_logger
-
 from rpi_audio_levels import AudioLevels
+
+from numpy import *
+
+from aurora_server.log import setup_logger
 
 logging = setup_logger('FFT')
 
