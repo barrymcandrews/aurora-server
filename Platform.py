@@ -18,7 +18,6 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
 import platform
 import re
 
@@ -52,7 +51,6 @@ def platform_detect():
     # Assumption is that mraa is installed
     try:
         import mraa
-
         if mraa.getPlatformName() == 'MinnowBoard MAX':
             return MINNOWBOARD
     except ImportError:
@@ -89,96 +87,25 @@ def pi_version():
     # Check /proc/cpuinfo for the Hardware field value.
     # 2708 is pi 1
     # 2709 is pi 2
+    # 2835 is pi 3 on 4.9.x kernel
     # Anything else is not a pi.
-    try:
-        with open('/proc/cpuinfo', 'r') as infile:
-            cpuinfo = infile.read()
-        # Match a line like 'Hardware   : BCM2709'
-        match = re.search('^Hardware\s+:\s+(\w+)$', cpuinfo,
-                          flags=re.MULTILINE | re.IGNORECASE)
-        if not match:
-            # Couldn't find the hardware, assume it isn't a pi.
-            return None
-        if match.group(1) == 'BCM2708':
-            # Pi 1
-            return 1
-        elif match.group(1) == 'BCM2709':
-            # Pi 2
-            return 2
-        else:
-            # Something else, not a pi.
-            return None
-    except FileNotFoundError:
+    with open('/proc/cpuinfo', 'r') as infile:
+        cpuinfo = infile.read()
+    # Match a line like 'Hardware   : BCM2709'
+    match = re.search('^Hardware\s+:\s+(\w+)$', cpuinfo,
+                      flags=re.MULTILINE | re.IGNORECASE)
+    if not match:
+        # Couldn't find the hardware, assume it isn't a pi.
         return None
-
-
-header40 = """A+, B+ and Pi2 B, and Zero models
-                         +=========+
-         POWER  3.3VDC   | 1 . . 2 |  5.0VDC   POWER
-      I2C SDA1  GPIO  8  | 3 . . 4 |  5.0VDC   POWER
-      I2C SCL1  GPIO  9  | 5 . . 6 |  GROUND
-      CPCLK0    GPIO  7  | 7 . . 8 |  GPIO 15  TxD UART
-                GROUND   | 9 . . 10|  GPIO 16  RxD UART
-                GPIO  0  |11 . . 12|  GPIO  1  PCM_CLK/PWM0
-                GPIO  2  |13 . . 14|  GROUND
-                GPIO  3  |15 . . 16|  GPIO  4
-         POWER  3.3VDC   |17 . . 18|  GPIO  5
-      SPI MOSI  GPIO 12  |19 .   20|  GROUND
-      SPI MISO  GPIO 13  |21 . . 22|  GPIO  6
-      SPI SCLK  GPIO 14  |23 . . 24|  GPIO 10  CE0 SPI
-                GROUND   |25 . . 26|  GPIO 11  CE1 SPI
- I2C ID EEPROM  SDA0     |27 . . 28|  SCL0     I2C ID EEPROM
-        GPCLK1  GPIO 21  |29 . . 30|  GROUND
-        CPCLK2  GPIO 22  |31 . . 32|  GPIO 26  PWM0
-          PWM1  GPIO 23  |33 . . 34|  GROUND
-   PCM_FS/PWM1  GPIO 24  |35 . . 36|  GPIO 27
-                GPIO 25  |37 . . 38|  GPIO 28  PCM_DIN
-                GROUND   |39 . . 40|  GPIO 29  PCM_DOUT
-                         +=========+"""
-
-header26 = """A and B models
-                         +=========+
-         POWER  3.3VDC   | 1 . . 2 |  5.0VDC   POWER
-      I2C SDA0  GPIO  8  | 3 . . 4 |  DNC  
-      I2C SCL0  GPIO  9  | 5 . . 6 |  GROUND
-                GPIO  7  | 7 . . 8 |  GPIO 15  TxD UART
-                DNC      | 9 . . 10|  GPIO 16  RxD UART
-                GPIO  0  |11 . . 12|  GPIO  1  PCM_CLK/PWM0
-                GPIO  2  |13 . . 14|  DNC
-                GPIO  3  |15 . . 16|  GPIO  4
-                DNC      |17 . . 18|  GPIO  5
-      SPI MOSI  GPIO 12  |19 .   20|  DNC
-      SPI MISO  GPIO 13  |21 . . 22|  GPIO  6
-      SPI SCLK  GPIO 14  |23 . . 24|  GPIO 10  CE0 SPI
-                DNC      |25 . . 26|  GPIO 11  CE1 SPI
-                         +=========+"""
-
-
-def get_model():
-    with open('/proc/cmdline', 'r') as f:
-        line = f.readline()
-        m = re.search('bcm2708.boardrev=(0x[0123456789abcdef]*) ', line)
-        model = m.group(1)[-2:].lower()
-    
-    if model in ["07", "08", "09"]:
-        return "Model A", header26
-    
-    elif model in ["02", "03", "04", "05", "06", "0d", "0e", "0f"]:
-        return "Model B", header26
-    
-    elif model in ["12", "15"]:
-        return "Model A+", header40
-    
-    elif model in ["10", "13"]:
-        return "Model B+", header40
-    
-    elif model in ["11"]:
-        return "Compute Module", "Custom"
-    
-    elif model in ["41"]:
-        return "Pi 2 Model B", header40
-    
-    elif model in ["92"]:
-        return "Pi Zero", header40
-    
-    raise RuntimeError('Could not determine Raspberry Pi model.')    
+    if match.group(1) == 'BCM2708':
+        # Pi 1
+        return 1
+    elif match.group(1) == 'BCM2709':
+        # Pi 2
+        return 2
+    elif match.group(1) == 'BCM2835':
+        # Pi 3 / Pi on 4.9.x kernel
+        return 3
+    else:
+        # Something else, not a pi.
+        return None
