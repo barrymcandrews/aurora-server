@@ -1,9 +1,10 @@
 from aurora_server import configuration
-from aurora_server.lights.light_process import LightProcess
+from aurora_server.lights import light_manager
+from janus import Queue
 
 config = configuration.Configuration()
-lightWorkerProcess = LightProcess()
-lightWorkerProcess.start()
+preset_queue = Queue()
+light_manager.start_process(preset_queue)
 
 
 def get_devices() -> dict:
@@ -42,5 +43,5 @@ def set_devices(data) -> dict:
                 d.preset = data
             elif d.name == name:
                 d.preset = preset
-    lightWorkerProcess.preset_queue.sync_q.put(data)
+    preset_queue.sync_q.put(data)
     return get_devices()

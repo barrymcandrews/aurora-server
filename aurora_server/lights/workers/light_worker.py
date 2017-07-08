@@ -1,8 +1,8 @@
 import asyncio
-from aurora_server.log import setup_logger
-from aurora_server.lights.filters.filter import Filter
 
-logger = setup_logger("Light Worker")
+from aurora_server.log import setup_logger
+
+logger = setup_logger("lights.workers.LightWorker")
 
 
 class LightWorker(object):
@@ -11,29 +11,9 @@ class LightWorker(object):
         self.preset = preset
         self.device = device
         self.future = asyncio.ensure_future(self.run())
-        self.audio_filter: Filter = None
 
     async def run(self):
-        if self.preset['type'] == 'audio':
-            await self.set_audio_filter()
-            self.audio_filter.process_audio()
-        else:
-            while True:
-                preset_type = self.preset['type']
-
-                if preset_type == 'levels':
-                    await self.set_levels(self.preset)
-                    break
-                elif preset_type == 'none':
-                    await self.set_off()
-                    break
-                elif preset_type == 'fade':
-                    await self.set_fade(self.preset)
-                elif preset_type == 'sequence':
-                    await self.set_sequence(self.preset)
-                else:
-                    print('Unknown type: "' + preset_type + '"')
-                    break
+        pass
 
     async def set_levels(self, preset):
         for label, value in preset.items():
@@ -88,11 +68,3 @@ class LightWorker(object):
                 elif effect['type'] == 'sequence':
                     await self.set_sequence(effect)
             repeats -= 1
-
-    async def set_audio_filter(self):
-        filter_name = self.preset['filter']
-
-        if filter_name == 'classic':
-            self.audio_filter = Filter(self.device)
-        else:
-            logger.debug("Audio filter " + filter_name + " not found.")

@@ -1,13 +1,15 @@
 import asyncio
 import threading
+from logging import Logger
+from multiprocessing import Process
 
 from janus import Queue
 
 from aurora_server import log, configuration
 from aurora_server.lights.device import Device
-from aurora_server.lights.light_worker import LightWorker
+from aurora_server.lights.workers.static_worker import LightWorker
 
-config = configuration.Configuration()
+config: configuration.Configuration = configuration.Configuration()
 devices: [Device] = config.hardware.devices
 logger = log.setup_logger('Light Worker Process')
 

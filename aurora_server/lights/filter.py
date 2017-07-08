@@ -1,12 +1,12 @@
 import audioop
-import errno
-import os
 from collections import deque
+from multiprocessing import Queue
 
 import numpy as np
 
 import aurora_server.lights.fft as fft
-from aurora_server import configuration
+from aurora_server import configuration, fifo
+from aurora_server.audio import fifo
 from aurora_server.lights import running_stats
 from aurora_server.log import setup_logger
 
@@ -42,34 +42,30 @@ class Filter(object):
         self.running_stats.preload(self.mean, self.std, self.num_channels)
 
     def process_audio(self):
+            input_q = Queue()
+            fifo.start_reading(input_q)
+
             while True:
-                with os.open(cm.lights.fifo_path, os.O_NONBLOCK) as fifo:
-                    while True:
-                        try:
-                            data = os.read(fifo, cm.lights.chunk_size)
+                data = input_q.get(block=False)
 
-                        except OSError as err:
-                            if err.errno == errno.EAGAIN or err.errno == errno.EWOULDBLOCK:
-                                return
+                if len(data):
+                    # if the maximum of the absolute value of all samples in
+                    # data is below a threshold we will disregard it
+                    audio_max = audioop.max(data, 2)
+                    if audio_max < 250:
+                        # we will fill the matrix with zeros and turn the lights off
+                        matrix = np.zeros(self.num_channels, dtype="float32")
+                        logger.debug("below threshold: '" + str(audio_max) + "', turning the lights off")
+                    else:
+                        matrix = self.fft_calc.calculate_levels(data)
+                        self.running_stats.push(matrix)
+                        self.mean = self.running_stats.mean()
+                        self.std = self.running_stats.std()
+                        self.matrix_buffer.appendleft(matrix)
 
-                        if len(data):
-                            # if the maximum of the absolute value of all samples in
-                            # data is below a threshold we will disregard it
-                            audio_max = audioop.max(data, 2)
-                            if audio_max < 250:
-                                # we will fill the matrix with zeros and turn the lights off
-                                matrix = np.zeros(self.num_channels, dtype="float32")
-                                logger.debug("below threshold: '" + str(audio_max) + "', turning the lights off")
-                            else:
-                                matrix = self.fft_calc.calculate_levels(data)
-                                self.running_stats.push(matrix)
-                                self.mean = self.running_stats.mean()
-                                self.std = self.running_stats.std()
-                                self.matrix_buffer.appendleft(matrix)
-
-                            if len(self.matrix_buffer) > self.light_delay:
-                                matrix = self.matrix_buffer[self.light_delay]
-                                self.update_lights(matrix, self.mean, self.std)
+                    if len(self.matrix_buffer) > self.light_delay:
+                        matrix = self.matrix_buffer[self.light_delay]
+                        self.update_lights(matrix, self.mean, self.std)
 
     def update_lights(self, matrix, mean, std):
         """Update the state of all the lights
@@ -102,6 +98,6 @@ class Filter(object):
             brightness = np.where(self.decay - decay_factor > 0, self.decay - decay_factor, brightness)
             self.decay = np.where(self.decay - decay_factor > 0, self.decay - decay_factor, self.decay)
 
-        for blevel, pin in zip(brightness, range(self.num_channels)):
-                self.device.set_pin_level(pin, blevel)
+        for level, pin in zip(brightness, range(self.num_channels)):
+                self.device.set_pin_level(pin, level)
 

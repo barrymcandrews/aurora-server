@@ -4,8 +4,10 @@ import sys
 from flask import Flask
 
 from aurora_server.audio import sources
-from aurora_server import configuration
+from aurora_server.lights import light_manager
 from aurora_server.web.endpoints import endpoints
+from aurora_server import configuration
+from aurora_server import fifo
 
 setproctitle.setproctitle('aurora_server')
 config = configuration.Configuration()
@@ -21,6 +23,10 @@ def shutdown(signum, frame):
 
 
 if __name__ == '__main__':
+
+    lights_process = light_manager.start_process()
+    audio_thread = fifo.start_reading()
+
     original_sigint = signal.getsignal(signal.SIGINT)
     signal.signal(signal.SIGINT, shutdown)
     signal.signal(signal.SIGTERM, shutdown)

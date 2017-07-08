@@ -5,8 +5,8 @@ from flask import jsonify
 from flask import request
 
 from aurora_server import configuration
-from aurora_server.web import audio_manager as am
-from aurora_server.web import light_manager as lm
+from aurora_server.web import audio_controller as am
+from aurora_server.web import light_controller as lm
 
 setproctitle.setproctitle('aurora_server')
 cm = configuration.Configuration()

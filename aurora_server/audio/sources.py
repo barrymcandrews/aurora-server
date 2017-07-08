@@ -2,7 +2,10 @@ import os
 import subprocess
 import signal
 from aurora_server import configuration
+from aurora_server import log
+from aurora_server import fifo
 
+logger = log.setup_logger('audio.sources')
 config = configuration.Configuration()
 config_path = os.path.dirname(os.path.realpath(__file__)) + '/../../config/mopidy.conf'
 audio_sources = {
@@ -20,7 +23,7 @@ def start_source(name):
         stop_current_source()
         active_source = name
         if name != 'none':
-            setup_fifo()
+            fifo.create()
             process = subprocess.Popen(audio_sources[name],
                                        stdout=subprocess.PIPE,
                                        stdin=subprocess.PIPE,
@@ -33,11 +36,6 @@ def stop_current_source():
     if process is not None and process.poll() is None:
         os.killpg(os.getpgid(process.pid), signal.SIGTERM)
         process.wait()
-        os.unlink(config.lights.fifo_path)
+        fifo.remove()
         active_source = 'none'
 
-
-def setup_fifo():
-    if os.path.exists(config.lights.fifo_path):
-        os.remove(config.lights.fifo_path)
-    os.mkfifo(config.lights.fifo_path, 0o0777)
