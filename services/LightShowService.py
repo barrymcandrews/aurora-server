@@ -15,7 +15,7 @@ from log import setup_logger
 
 cm = configuration_manager.Configuration()
 
-GPIO_LEN = 3
+GPIO_LEN = 6
 
 config_path = os.path.dirname(os.path.realpath(__file__)) + '/../config/mopidy.conf'
 logger = setup_logger("Light Show Service")

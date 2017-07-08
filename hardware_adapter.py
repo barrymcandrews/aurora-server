@@ -3,10 +3,10 @@ import Platform
 from log import setup_logger
 from time import sleep
 
-PINS = [0, 5, 3]
-RED_PIN = PINS[0]
+PINS = [0, 2, 3, 21, 22, 23]
+RED_PIN = PINS[2]
 GREEN_PIN = PINS[1]
-BLUE_PIN = PINS[2]
+BLUE_PIN = PINS[0]
 
 is_a_raspberryPi = Platform.platform_detect() == 1
 is_gpio_enabled = False
@@ -26,10 +26,9 @@ wiringpi.wiringPiSetup()
 def enable_gpio():
     global is_gpio_enabled
     """Attempts to take hold of the gpio from wiring pi."""
+    for pin in PINS:
+        wiringpi.softPwmCreate(pin, 0, 100)
 
-    wiringpi.softPwmCreate(RED_PIN, 0, 100)
-    wiringpi.softPwmCreate(GREEN_PIN, 0, 100)
-    wiringpi.softPwmCreate(BLUE_PIN, 0, 100)
     is_gpio_enabled = True
 
 
@@ -37,9 +36,8 @@ def disable_gpio():
     global is_gpio_enabled
     """Releases hold on gpio, so other programs can use it"""
 
-    wiringpi.softPwmStop(RED_PIN)
-    wiringpi.softPwmStop(GREEN_PIN)
-    wiringpi.softPwmStop(BLUE_PIN)
+    for pin in PINS:
+        wiringpi.softPwmStop(pin)
     is_gpio_enabled = False
 
 
@@ -55,7 +53,7 @@ def set_pin_level(pin, value):
     if math.isnan(value):
         value = 0.0
 
-    if 0 <= pin <= 2:
+    if 0 <= pin <= 5:
         wiringpi.softPwmWrite(PINS[pin], int(value * 100))
 
 
