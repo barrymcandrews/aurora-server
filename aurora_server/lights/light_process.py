@@ -1,11 +1,10 @@
 import asyncio
 import threading
-from logging import Logger
-from multiprocessing import Process
 
 from janus import Queue
 
-from aurora_server import log, configuration
+from aurora_server import log
+from aurora_server.lights import configuration
 from aurora_server.lights.device import Device
 from aurora_server.lights.workers.static_worker import LightWorker
 

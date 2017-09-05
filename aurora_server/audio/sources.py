@@ -1,9 +1,9 @@
 import os
-import subprocess
 import signal
-from aurora_server import configuration
-from aurora_server import log
+import subprocess
+
 from aurora_server import fifo
+from aurora_server import log, configuration
 
 logger = log.setup_logger('audio.sources')
 config = configuration.Configuration()

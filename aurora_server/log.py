@@ -11,5 +11,5 @@ def setup_logger(name: str) -> logging.Logger:
         handler.setFormatter(logging.Formatter('%(name)s - %(levelname)s - %(message)s'))
         logger.addHandler(handler)
         setup_loggers.append(name)
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
     return logger

@@ -5,8 +5,7 @@ from flask import jsonify
 from flask import request
 
 from aurora_server import configuration
-from aurora_server.web import audio_controller as am
-from aurora_server.web import light_controller as lm
+from . import service_controller as sc
 
 setproctitle.setproctitle('aurora_server')
 cm = configuration.Configuration()
@@ -26,17 +25,17 @@ def server_info():
 
 @endpoints.route('/api/v2/lights', methods=['GET', 'POST'])
 def lights():
-    return jsonify(lm.get_devices() if request.method == 'GET' else lm.set_devices(request.json))
+    return jsonify(sc.get_devices() if request.method == 'GET' else sc.set_devices(request.json))
 
 
 @endpoints.route('/api/v2/lights/<name>', methods=['GET', 'POST'])
 def light(name):
-    return jsonify(lm.get_device(name) if request.method == 'GET' else lm.set_devices({name: request.json}))
+    return jsonify(sc.get_device(name) if request.method == 'GET' else sc.set_devices({name: request.json}))
 
 
 @endpoints.route('/api/v2/audio/sources', methods=['GET', 'POST'])
 def audio_sources():
-    return jsonify(am.get_sources() if request.method == 'GET' else am.set_sources(request.json))
+    return jsonify(sc.get_sources() if request.method == 'GET' else sc.set_sources(request.json))
 
 
 @endpoints.route('/api/v2/audio/tts/<message>', methods=['POST'])

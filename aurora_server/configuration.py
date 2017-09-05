@@ -1,8 +1,8 @@
 import json
 import os
 from configparser import RawConfigParser
-
-from aurora_server.lights.device import Device
+from typing import List, Dict
+from aurora_server.lights import pins
 
 config_dir_path = os.path.dirname(os.path.realpath(__file__)) + '/../config/'
 
@@ -34,13 +34,18 @@ class Configuration(object):
         section = 'hardware'
         hdwr = dict()
 
-        devices = list()
-        all_channels = list()
-        for name, channels in json.loads(self.config.get(section, 'devices')).items():
-            all_channels.append(channels)
-            devices.append(Device(name, [channels]))
+        all_pins: List[int] = []
+        devices: List[pins.Device] = []
+
+        for name, json_dev in json.loads(self.config.get(section, 'devices')).items():
+            mapping: Dict[int, str] = {}
+            for pin_str, label in json_dev['channels'].items():
+                mapping.update({int(pin_str): label})
+                all_pins.append(int(pin_str))
+            devices.append(pins.Device(name, mapping))
+
         hdwr['devices'] = devices
-        hdwr['all_devices'] = Device('all', all_channels)
+        hdwr['all_pins'] = all_pins
 
         self.hardware = Section(hdwr)
 

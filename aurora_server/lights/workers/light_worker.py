@@ -10,10 +10,6 @@ class LightWorker(object):
     def __init__(self, preset, device):
         self.preset = preset
         self.device = device
-        self.future = asyncio.ensure_future(self.run())
-
-    async def run(self):
-        pass
 
     async def set_levels(self, preset):
         for label, value in preset.items():

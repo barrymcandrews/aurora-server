@@ -1,10 +1,12 @@
+import errno
 import os
 import threading
-import errno
 from logging import Logger
+
 from janus import Queue
-from aurora_server import configuration
+
 from aurora_server import log
+from aurora_server import configuration
 
 logger: Logger = log.setup_logger('audio.fifo')
 config: configuration.Configuration = configuration.Configuration()
@@ -13,10 +15,11 @@ is_open: bool = False
 
 
 def create():
-    logger.info('Making FIFO')
+    logger.info('Making FIFO(s)')
     if os.path.exists(config.lights.fifo_path):
         os.remove(config.lights.fifo_path)
-    os.mkfifo(config.lights.fifo_path, 0o0777)
+    os.mkfifo(config.lights.fifo_path, mode=0o777)
+    os.chmod('/tmp/audio', mode=0o777)
 
 
 def remove():

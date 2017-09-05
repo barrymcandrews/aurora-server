@@ -1,6 +1,6 @@
 import asyncio
 
-from aurora_server.lights.filter import Filter
+from aurora_server.lights.visualizer import Visualizer
 from aurora_server.log import setup_logger
 from .light_worker import LightWorker
 
@@ -11,7 +11,7 @@ class FilterWorker(LightWorker):
 
     def __init__(self, preset, device):
         super().__init__(preset, device)
-        self.filter = Filter(device)
+        self.filter = Visualizer(device)
 
     async def run(self):
         try:
