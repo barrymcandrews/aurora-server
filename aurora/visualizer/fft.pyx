@@ -22,17 +22,15 @@ numpy: for array support - http://www.numpy.org/
 rpi-audio-levels - https://bitbucket.org/tom_slick/rpi-audio-levels (modified for lightshowpi)
 """
 
-import math
 from rpi_audio_levels import AudioLevels
-
 from numpy import *
 
-from aurora_server.log import setup_logger
 
-logging = setup_logger('FFT')
+cdef class FFT(object):
 
+    cdef int chunk_size, sample_rate, num_bins, min_frequency, max_frequency, input_channels
+    cdef object window, custom_channel_mapping, custom_channel_frequencies, frequency_limits, audio_levels, piff
 
-class FFT(object):
     def __init__(self,
                  chunk_size,
                  sample_rate,
@@ -80,7 +78,6 @@ class FFT(object):
         self.custom_channel_mapping = custom_channel_mapping
         self.custom_channel_frequencies = custom_channel_frequencies
         self.frequency_limits = self.calculate_channel_frequency()
-        self.config_filename = ""
         self.audio_levels = AudioLevels(math.log(chunk_size / 2, 2), num_bins)
 
         fl = array(self.frequency_limits)
@@ -91,17 +88,17 @@ class FFT(object):
                 self.piff[a][1] += 1
         self.piff = self.piff.tolist()
 
-    def calculate_levels(self, data):
+    cpdef object calculate_levels(self, bytes data_frames):
         """Calculate frequency response for each channel defined in frequency_limits
 
-        :param data: decoder.frames(), audio data for fft calculations
-        :type data: decoder.frames
+        :param data_frames: decoder.frames(), audio data for fft calculations
+        :type data_frames: decoder.frames
 
         :return:
         :rtype: numpy.array
         """
         # create a numpy array, taking just the left channel if stereo
-        data_stereo = frombuffer(data, dtype="int16")
+        data_stereo = frombuffer(data_frames, dtype="int16")
 
         if self.input_channels == 2:
             # data has 2 bytes per channel
@@ -120,7 +117,7 @@ class FFT(object):
 
         # if all zeros in data then there is no need to do the fft
         if all(data == 0.0):
-            return zeros(self.num_bins, dtype="float32")
+            return zeros(self.num_bins, dtype=np.float32)
 
         # Apply FFT - real data
         # Calculate the power spectrum
@@ -129,7 +126,7 @@ class FFT(object):
 
         return cache_matrix
 
-    def calculate_channel_frequency(self):
+    cpdef object calculate_channel_frequency(self):
         """Calculate frequency values
 
         Calculate frequency values for each channel,
@@ -141,16 +138,16 @@ class FFT(object):
 
         # How many channels do we need to calculate the frequency for
         if self.custom_channel_mapping != 0 and len(self.custom_channel_mapping) == self.num_bins:
-            logging.debug("Custom Channel Mapping is being used: %s",
-                          str(self.custom_channel_mapping))
+            # logging.debug("Custom Channel Mapping is being used: %s",
+            #               str(self.custom_channel_mapping))
             channel_length = max(self.custom_channel_mapping)
         else:
-            logging.debug("Normal Channel Mapping is being used.")
+            # logging.debug("Normal Channel Mapping is being used.")
             channel_length = self.num_bins
 
-        logging.debug("Calculating frequencies for %d channels.", channel_length)
+        # logging.debug("Calculating frequencies for %d channels.", channel_length)
         octaves = (log(self.max_frequency / self.min_frequency)) / log(2)
-        logging.debug("octaves in selected frequency range ... %s", octaves)
+        # logging.debug("octaves in selected frequency range ... %s", octaves)
         octaves_per_channel = octaves / channel_length
         frequency_limits = []
         frequency_store = []
@@ -159,17 +156,17 @@ class FFT(object):
 
         if self.custom_channel_frequencies != 0 and (
                     len(self.custom_channel_frequencies) >= channel_length + 1):
-            logging.debug("Custom channel frequencies are being used")
+            # logging.debug("Custom channel frequencies are being used")
             frequency_limits = self.custom_channel_frequencies
         else:
-            logging.debug("Custom channel frequencies are not being used")
+            # logging.debug("Custom channel frequencies are not being used")
             for pin in range(1, self.num_bins + 1):
                 frequency_limits.append(frequency_limits[-1]
                                         * 10 ** (3 / (10 * (1 / octaves_per_channel))))
         for pin in range(0, channel_length):
             frequency_store.append((frequency_limits[pin], frequency_limits[pin + 1]))
-            logging.debug("channel %d is %6.2f to %6.2f ", pin, frequency_limits[pin],
-                          frequency_limits[pin + 1])
+            # logging.debug("channel %d is %6.2f to %6.2f ", pin, frequency_limits[pin],
+            #               frequency_limits[pin + 1])
 
         # we have the frequencies now lets map them if custom mapping is defined
         if self.custom_channel_mapping != 0 and len(self.custom_channel_mapping) == self.num_bins:
@@ -180,9 +177,9 @@ class FFT(object):
                 mapped_frequency_set = frequency_store[mapped_channel]
                 mapped_frequency_set_low = mapped_frequency_set[0]
                 mapped_frequency_set_high = mapped_frequency_set[1]
-                logging.debug("mapped channel: " + str(mapped_channel) + " will hold LOW: "
-                              + str(mapped_frequency_set_low) + " HIGH: "
-                              + str(mapped_frequency_set_high))
+                # logging.debug("mapped channel: " + str(mapped_channel) + " will hold LOW: "
+                #               + str(mapped_frequency_set_low) + " HIGH: "
+                #               + str(mapped_frequency_set_high))
                 frequency_map.append(mapped_frequency_set)
 
             return frequency_map

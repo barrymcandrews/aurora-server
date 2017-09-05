@@ -20,11 +20,11 @@ Although it may be possible to run this project on Windows, this server is desig
 
 #### Python
 
-Before running the project you need to install python 3. On Raspbian, you can use the Advanced Package Tool:
+Before running the project you need to install python 3.6. On Raspbian, you can use the Advanced Package Tool:
 
 ```
 $ sudo apt-get update
-$ sudo apt-get install python3
+$ sudo apt-get install python3 libasound2-dev
 ``` 
 
 #### Mopidy

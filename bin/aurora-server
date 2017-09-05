@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-
-MY_PATH="`dirname \"$0\"`"
-sudo /usr/bin/env python3.6 "$MY_PATH/../aurora_server/main.py"
