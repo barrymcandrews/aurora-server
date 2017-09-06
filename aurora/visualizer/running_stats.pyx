@@ -19,9 +19,6 @@ cimport numpy as np
 
 cdef class Stats(object):
 
-    cdef int length, sample_count
-    cdef object empty, old_mean, old_std, new_mean, new_std
-
     def __init__(self, int length):
         """Constructor
 
@@ -43,7 +40,7 @@ cdef class Stats(object):
         self.new_mean = self.empty
         self.new_std = self.empty
 
-    cpdef preload(self, np.ndarray[np.float32_t, ndim=1] mean, np.ndarray[np.float32_t, ndim=1] std, int sample_count=2):
+    cdef public void preload(self, np.ndarray[np.float32_t, ndim=1] mean, np.ndarray[np.float32_t, ndim=1] std, int sample_count):
         """Add a starting samples to the running standard deviation and mean
         
         This data does not need to be accurate.  It is only a base starting
@@ -67,7 +64,7 @@ cdef class Stats(object):
             self.old_std = np.array(std, dtype=np.float32)
             self.sample_count = sample_count
 
-    cpdef push(self, np.ndarray[np.float64_t, ndim=1] data):
+    cdef public void push(self, np.ndarray[np.float32_t, ndim=1] data):
         """Add a new sample to the running standard deviation and mean
 
         data should be numpy array the same length as self.length
@@ -96,26 +93,26 @@ cdef class Stats(object):
         """
         return self.sample_count
 
-    cpdef np.ndarray[np.float64_t, ndim=1] mean(self):
+    cdef public np.ndarray[np.float32_t, ndim=1] mean(self):
         """Get the current mean
         
         :return: current sampled mean
         :rtype: numpy array
         """
-        return self.new_mean
+        return np.asarray(self.new_mean)
 
-    cpdef np.ndarray[np.float64_t, ndim=1] variance(self):
+    cdef public np.ndarray[np.float32_t, ndim=1] variance(self):
         """Get the current variance 
         
         :return: current variance
         :rtype: numpy array
         """
         if self.sample_count > 1:
-            return self.new_std / (self.sample_count - 1.0)
+            return np.asarray(self.new_std) / (self.sample_count - 1.0)
         else:
-            return self.empty
+            return np.asarray(self.empty)
 
-    cpdef np.ndarray[np.float64_t, ndim=1] std(self):
+    cdef public np.ndarray[np.float32_t, ndim=1] std(self):
         """Get the current standard deviation 
         
         :return: current standard deviation

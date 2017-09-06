@@ -23,13 +23,10 @@ rpi-audio-levels - https://bitbucket.org/tom_slick/rpi-audio-levels (modified fo
 """
 
 from rpi_audio_levels import AudioLevels
-from numpy import *
-
+import numpy as np
+cimport numpy as np
 
 cdef class FFT(object):
-
-    cdef int chunk_size, sample_rate, num_bins, min_frequency, max_frequency, input_channels
-    cdef object window, custom_channel_mapping, custom_channel_frequencies, frequency_limits, audio_levels, piff
 
     def __init__(self,
                  chunk_size,
@@ -72,23 +69,23 @@ cdef class FFT(object):
         self.sample_rate = sample_rate
         self.num_bins = num_bins
         self.input_channels = input_channels
-        self.window = hanning(0)
+        self.window = np.hanning(0).astype(dtype=np.float32)
         self.min_frequency = min_frequency
         self.max_frequency = max_frequency
         self.custom_channel_mapping = custom_channel_mapping
         self.custom_channel_frequencies = custom_channel_frequencies
         self.frequency_limits = self.calculate_channel_frequency()
-        self.audio_levels = AudioLevels(math.log(chunk_size / 2, 2), num_bins)
+        self.audio_levels = AudioLevels(np.math.log(chunk_size / 2, 2), num_bins)
 
-        fl = array(self.frequency_limits)
-        self.piff = ((fl * self.chunk_size) / self.sample_rate).astype(int)
+        fl = np.array(self.frequency_limits)
+        piff = ((fl * self.chunk_size) / self.sample_rate).astype(int)
 
-        for a in range(len(self.piff)):
-            if self.piff[a][0] == self.piff[a][1]:
-                self.piff[a][1] += 1
-        self.piff = self.piff.tolist()
+        for a in range(len(piff)):
+            if piff[a][0] == piff[a][1]:
+                piff[a][1] += 1
+        self.piff = piff.tolist()
 
-    cpdef object calculate_levels(self, bytes data_frames):
+    cdef public np.ndarray[np.float32_t, ndim=1] calculate_levels(self, bytes data_frames):
         """Calculate frequency response for each channel defined in frequency_limits
 
         :param data_frames: decoder.frames(), audio data for fft calculations
@@ -98,12 +95,12 @@ cdef class FFT(object):
         :rtype: numpy.array
         """
         # create a numpy array, taking just the left channel if stereo
-        data_stereo = frombuffer(data_frames, dtype="int16")
+        data_stereo = np.frombuffer(data_frames, dtype="int16")
 
         if self.input_channels == 2:
             # data has 2 bytes per channel
             # pull out the even values, just using left channel
-            data = array(data_stereo[::2])
+            data = np.array(data_stereo[::2])
         elif self.input_channels == 1:
             data = data_stereo
 
@@ -111,22 +108,22 @@ cdef class FFT(object):
         # super high frequency cutoffs. Applying a window tapers the edges
         # of each end of the chunk down to zero.
         if len(data) != len(self.window):
-            self.window = hanning(len(data)).astype(float32)
+            self.window = np.hanning(len(data)).astype(np.float32)
 
         data = data * self.window
 
         # if all zeros in data then there is no need to do the fft
         if all(data == 0.0):
-            return zeros(self.num_bins, dtype=np.float32)
+            return np.zeros(self.num_bins, dtype=np.float32)
 
         # Apply FFT - real data
         # Calculate the power spectrum
-        cache_matrix = array(self.audio_levels.compute(data, self.piff)[0])
-        cache_matrix[isinf(cache_matrix)] = 0.0
+        cache_matrix = np.array(self.audio_levels.compute(data, self.piff)[0], dtype=np.float32)
+        cache_matrix[np.isinf(cache_matrix)] = 0.0
 
         return cache_matrix
 
-    cpdef object calculate_channel_frequency(self):
+    cdef public list calculate_channel_frequency(self):
         """Calculate frequency values
 
         Calculate frequency values for each channel,
@@ -146,7 +143,7 @@ cdef class FFT(object):
             channel_length = self.num_bins
 
         # logging.debug("Calculating frequencies for %d channels.", channel_length)
-        octaves = (log(self.max_frequency / self.min_frequency)) / log(2)
+        octaves = (np.log(self.max_frequency / self.min_frequency)) / np.log(2)
         # logging.debug("octaves in selected frequency range ... %s", octaves)
         octaves_per_channel = octaves / channel_length
         frequency_limits = []
