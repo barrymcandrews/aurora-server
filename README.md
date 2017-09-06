@@ -1,6 +1,6 @@
 # Aurora Server
 
-This server allows you to control an RGB LED strip connected to a Raspberry Pi ([like this setup](http://dordnung.de/raspberrypi-ledstrip/)) through a RESTful API.
+This server allows you to control RGB LED strips connected to a Raspberry Pi through a RESTful web API. For instructions on how to set up the hardware [see this example](http://dordnung.de/raspberrypi-ledstrip/).
 
 ### About
 
@@ -16,7 +16,7 @@ The server has two main functions:
 ## Getting Started
 
 ### Prerequisities
-Although it may be possible to run this project on Windows, this server is designed to run on a Raspberry Pi, so it will work best on a POSIX system.
+This project was designed specifically to run on a raspberry pi. It's been confirmed to work on the Raspberry Pi 3 and Zero, but should work on any model.
 
 #### Python
 
@@ -24,7 +24,7 @@ Before running the project you need to install python 3.6. On Raspbian, you can 
 
 ```
 $ sudo apt-get update
-$ sudo apt-get install python3 libasound2-dev
+$ sudo apt-get install python3
 ``` 
 
 #### Mopidy
@@ -32,7 +32,7 @@ This project uses the mopidy sound server to stream music from the internet. You
 
 ### Installation
 
-To use and contribute to this project clone it directly from this repository:
+To install the server from source, first clone the repository:
 
 ```
 #HTTP
@@ -41,13 +41,20 @@ $ git clone https://github.com/barrymcandrews/aurora-server.git
 $ git clone git@github.com:barrymcandrews/aurora-server.git
 ```
 
+Next, build the project with Cython and install the dependencies:
+
+```
+$ cd aurora-server
+$ sudo python3.6 setup.py build_ext --inplace
+```
+
 
 ## How to Use
 
-To start the server execute the file `aurora_server.py` with root privileges:
+To start the server execute the file `aurora/main.py` with root privileges:
 
 ```
-$ sudo ./aurora_server.py
+$ sudo ./aurora/root.py
 ```
 
 ### Managing Services

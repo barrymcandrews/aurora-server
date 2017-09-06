@@ -1,3 +1,4 @@
+#!/usr/bin/env python3.6
 import json
 from typing import List, Dict
 from sanic import Sanic

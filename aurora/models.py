@@ -1,5 +1,8 @@
 import asyncio
 from typing import Dict, List
+
+from sanic.exceptions import InvalidUsage
+
 from aurora import displayables
 from aurora.configuration import Configuration, Channel
 from aurora.displayables import Displayable
@@ -11,23 +14,27 @@ class Preset:
     next_id: int = 0
 
     def __init__(self, d):
-        Preset.next_id = Preset.next_id + 1
-        self.id: int = Preset.next_id
-        self.name: str = d['name']
+        try:
+            Preset.next_id = Preset.next_id + 1
+            self.id: int = Preset.next_id
+            self.name: str = d['name']
 
-        self.channels: List[Channel] = []
-        for channel in d['pins']:
-            self.channels.append(config.hardware.channels_dict[channel])
+            self.channels: List[Channel] = []
+            for channel in d['pins']:
+                self.channels.append(config.hardware.channels_dict[channel])
 
-        self.payload: Dict = d['payload']
-        self.displayable: Displayable = displayables.factory(self.payload)
-        self.task: asyncio.Task = None
+            self.payload: Dict = d['payload']
+            self.displayable: Displayable = displayables.factory(self.payload)
+            self.task: asyncio.Task = None
+        except KeyError:
+            raise InvalidUsage('Invalid payload syntax.')
 
     def start(self):
         self.task = self.displayable.start(self.channels)
         return self
 
     async def stop(self):
+        self.displayable.stop()
         if self.task is not None:
             self.task.cancel()
             await self.task

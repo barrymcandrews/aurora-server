@@ -3,7 +3,6 @@ from asyncio import CancelledError
 from copy import deepcopy
 from typing import Dict, List
 import asyncio
-import os
 from sanic.exceptions import InvalidUsage
 from aurora.configuration import Channel, Configuration
 from aurora.protocols import AudioFilterProtocol
@@ -28,6 +27,9 @@ class Displayable(object):
     def start(self, channels) -> asyncio.Task:
         return asyncio.ensure_future(self.display_in_loop(channels))
 
+    def stop(self):
+        pass
+
     async def display_in_loop(self, channels: List[Channel]):
         if self.requires_loop:
             try:
@@ -50,12 +52,15 @@ class Levels(Displayable):
         super().__init__()
         self.requires_loop = False
         self.levels: Dict[str, int] = levels
+        for label, value in levels.items():
+            if not (0 <= value <= 100):
+                raise InvalidUsage('Level value not in range.')
 
     async def display(self, channels):
         for label, value in self.levels.items():
-            for channel in channels:
-                if channel.label == label:
-                    hardware.set_pwm(channel.pin, value)
+            for ch in channels:
+                if ch.label == label:
+                    hardware.set_pwm(ch.pin, value)
 
 
 class Fade(Displayable):
@@ -102,7 +107,8 @@ class Sequence(Displayable):
     async def display(self, channels):
         for item in self.items:
             await item.display(channels)
-            await asyncio.sleep(self.delay)
+            if isinstance(item, Levels):
+                await asyncio.sleep(self.delay)
 
 
 class VisualizerPreset(Displayable):
@@ -119,6 +125,9 @@ class VisualizerPreset(Displayable):
     def start(self, channels):
         AudioFilterProtocol.current_visualizer = Visualizer(channels, self.filter)
         return None
+
+    def stop(self):
+        AudioFilterProtocol.current_visualizer = None
 
     async def display(self, channels: List[Channel]):
         pass
