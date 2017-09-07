@@ -28,6 +28,17 @@ class Configuration(object):
             self.hostname: str = config.get(section, 'hostname')
             self.port: int = config.getint(section, 'port')
             self.workers: int = config.getint(section, 'workers')
+            self.version = "2.1.0"
+            self.logo = """
+     ____       __         _______     ________   _______        ____
+    /    \     |  |       |_____  \   /   __   \ |_____  \      /    \ 
+   /  /\  \    |  |   __   _____)  |  |  |  |  |  _____)  |    /  /\  \ 
+  /  /  \__\   |  |  |  | |_____  |   |  |  |  | |_____  |    /  /  \__\ 
+ /  /     ___  |  |__|  |       \  \  |  |__|  |      \  \   /  /     ___ 
+/__/      \__\ \________/        \__\ \________/       \__\ /__/      \__\ 
+
+           --     Light Server     --     Version 2.1.0     --
+"""
 
     class Hardware(object):
         def __init__(self, config: RawConfigParser):

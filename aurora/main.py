@@ -72,6 +72,7 @@ class PresetItemView(HTTPMethodView):
 
 
 if __name__ == '__main__':
+    app.config.LOGO = config.core.logo
     app.add_task(protocols.read_fifo())
     app.add_route(ChannelsView.as_view(), '/api/v2/channels')
     app.add_route(PresetsView.as_view(), '/api/v2/presets')
