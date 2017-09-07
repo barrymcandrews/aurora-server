@@ -14,6 +14,5 @@ def disable(pins: List[int]):
         wiringpi.softPwmStop(pin)
 
 
-cpdef set_pwm(pin: int, level: int):
-    if 0 <= level <= 100:
-        wiringpi.softPwmWrite(pin, level)
+cpdef set_pwm(int pin, int level):
+    wiringpi.softPwmWrite(pin, level)
