@@ -19,6 +19,10 @@ cimport numpy as np
 
 cdef class Stats(object):
 
+    cdef:
+        int length, sample_count
+        object empty, old_mean, old_std, new_mean, new_std
+
     def __init__(self, int length):
         """Constructor
 

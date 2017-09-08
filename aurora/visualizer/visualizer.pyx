@@ -12,6 +12,10 @@ cm = Configuration()
 
 cdef class Visualizer(object):
 
+    cdef:
+        int num_channels
+        object filter, channels, decay, fft_calc, light_delay, matrix_buffer, mean, std, running_stats
+
     def __init__(self, channels: List[Channel], vfilter: Configuration.Filter):
         super().__init__()
         self.filter = vfilter

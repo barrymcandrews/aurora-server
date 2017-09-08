@@ -28,6 +28,10 @@ from numpy import *
 
 cdef class FFT(object):
 
+    cdef:
+        int chunk_size, sample_rate, num_bins, input_channels, min_frequency, max_frequency
+        object window, custom_channel_mapping, custom_channel_frequencies, frequency_limits, audio_levels, piff
+
     def __init__(self,
                  chunk_size,
                  sample_rate,
