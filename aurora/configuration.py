@@ -27,7 +27,9 @@ class Configuration(object):
             section = 'core'
             self.hostname: str = config.get(section, 'hostname')
             self.port: int = config.getint(section, 'port')
-            self.workers: int = config.getint(section, 'workers')
+            self.debug: bool = config.getboolean(section, 'debug')
+            self.openapi: bool = config.getboolean(section, 'openapi')
+            self.process_name = "aurora-server"
             self.version = "2.1.0"
             self.logo = """
      ____       __         _______     ________   _______        ____

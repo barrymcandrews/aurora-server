@@ -1,6 +1,9 @@
+import logging
 import os
 import asyncio
 import aiofiles
+
+log = logging.getLogger(__name__)
 
 
 class AudioFilterProtocol(asyncio.Protocol):
@@ -11,7 +14,7 @@ class AudioFilterProtocol(asyncio.Protocol):
         self.complete_event = asyncio.Event()
 
     def connection_made(self, transport):
-        print('connection made')
+        log.debug('connection made')
 
     def data_received(self, data: bytes):
         if AudioFilterProtocol.current_visualizer is not None:
@@ -19,17 +22,17 @@ class AudioFilterProtocol(asyncio.Protocol):
                 AudioFilterProtocol.current_visualizer.visualize(data[i:i+2048])
 
     def eof_received(self):
-        print("Audio EOF Received!")
+        log.debug("Audio EOF Received!")
 
     def connection_lost(self, exc):
-        print("Audio Connection Lost!")
+        log.debug("Audio Connection Lost!")
         self.complete_event.set()
 
     def pause_writing(self):
-        print("Writing Paused!")
+        log.debug("Writing Paused!")
 
     def resume_writing(self):
-        print("Writing Resumed")
+        log.debug("Writing Resumed")
 
 
 def create_fifo():
