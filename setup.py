@@ -10,5 +10,5 @@ setup(
     author='M. Barry McAndrews',
     author_email='bmcandrews@pitt.edu',
     ext_modules=cythonize(['aurora/visualizer/*.pyx', 'aurora/hardware.pyx']),
-    requires=['numpy', 'Cython', 'flask', 'uvloop', 'aiofiles', 'sanic', 'wiringpi']
+    requires=['numpy', 'Cython', 'flask', 'uvloop', 'aiofiles', 'sanic', 'wiringpi', 'setproctitle']
 )
