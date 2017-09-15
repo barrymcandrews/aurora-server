@@ -36,10 +36,10 @@ class AudioFilterProtocol(asyncio.Protocol):
 
 
 def create_fifo():
-    if os.path.exists('/tmp/audio'):
-        os.remove('/tmp/audio')
-    os.mkfifo('/tmp/audio', mode=0o777)
-    os.chmod('/tmp/audio', mode=0o777)
+    if os.path.exists('/tmp/aurora-fifo'):
+        os.remove('/tmp/aurora-fifo')
+    os.mkfifo('/tmp/aurora-fifo', mode=0o777)
+    os.chmod('/tmp/aurora-fifo', mode=0o777)
 create_fifo()
 
 
@@ -49,6 +49,6 @@ async def read_fifo():
     afp = AudioFilterProtocol()
     while True:
         afp.complete_event.clear()
-        audio_fifo = await aiofiles.open('/tmp/audio', mode='r')
+        audio_fifo = await aiofiles.open('/tmp/aurora-fifo', mode='r')
         await loop.connect_read_pipe(lambda: afp, audio_fifo)
         await afp.complete_event.wait()

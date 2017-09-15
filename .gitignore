@@ -103,6 +103,7 @@ ENV/
 .idea/**/tasks.xml
 .idea/dictionaries
 .idea/deployment.xml
+.idea/webServers.xml
 
 # Sensitive or high-churn files:
 .idea/**/dataSources/
