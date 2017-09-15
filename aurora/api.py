@@ -37,9 +37,9 @@ async def put_presets(new_presets: List[Preset]):
 
     dropped_channels: List[Channel] = []
 
-    for running_preset in presets:
-        for new_preset in new_presets:
-            for new_channel in new_preset.channels:
+    for new_preset in new_presets:
+        for new_channel in new_preset.channels:
+            for running_preset in presets:
                 if new_channel in running_preset.channels:
                     await running_preset.stop()
                     presets.remove(running_preset)
