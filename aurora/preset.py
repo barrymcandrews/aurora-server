@@ -22,12 +22,18 @@ class Preset:
             self.channels: List[Channel] = []
             for channel in d['pins']:
                 self.channels.append(config.hardware.channels_dict[channel])
+            self.verify_pins()
 
             self.payload: Dict = d['payload']
             self.displayable: Displayable = displayables.factory(self.payload)
             self.task: asyncio.Task = None
         except KeyError:
             raise InvalidUsage('Invalid payload syntax.')
+
+    def verify_pins(self):
+        for channel in self.channels:
+            if channel not in config.hardware.channels:
+                raise InvalidUsage('Pin ' + str(channel.pin) + ' not found.')
 
     def start(self):
         self.task = self.displayable.start(self.channels)

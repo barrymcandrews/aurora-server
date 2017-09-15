@@ -1,5 +1,6 @@
 import json
 from typing import List, Dict
+from pyximport import pyximport
 from sanic import Blueprint
 from sanic import response
 from sanic.exceptions import NotFound, InvalidUsage
@@ -8,21 +9,51 @@ from sanic_openapi import doc
 from aurora.configuration import Configuration, Channel
 from aurora.preset import Preset
 
+pyximport.install()
+from aurora import hardware
+
 api = Blueprint('aurora-lights', url_prefix='/api/v2')
 config: Configuration = Configuration()
 
-channels: List[Channel] = config.hardware.channels
 presets: List[Preset] = []
 
 
-async def remove_conflicts(preset: Preset):
-    for channel in preset.channels:
-        if channel not in channels:
-            raise InvalidUsage('Pin ' + str(channel.pin) + ' not found.')
-        for running_preset in presets:
-            if channel in running_preset.channels:
-                await running_preset.stop()
-                presets.remove(running_preset)
+async def add_presets(new_presets: List[Preset]):
+    """Starts and adds each preset to the Global List."""
+
+    for preset in new_presets:
+        presets.append(preset.start())
+
+
+async def put_presets(new_presets: List[Preset]):
+    """Checks for conflicts then adds each preset.
+
+    Checks whether the currently running presets are using channels that
+    will be required by the new presets. If there are any conflicts the old
+    preset will be stopped. Any channels that were used by a cancelled preset
+    that aren't used by a new preset are set to off.
+
+    """
+
+    dropped_channels: List[Channel] = []
+
+    for running_preset in presets:
+        for new_preset in new_presets:
+            for new_channel in new_preset.channels:
+                if new_channel in running_preset.channels:
+                    await running_preset.stop()
+                    presets.remove(running_preset)
+                    dropped_channels += running_preset.channels
+
+    for new_preset in new_presets:
+        for new_channel in new_preset.channels:
+            if new_channel in dropped_channels:
+                dropped_channels.remove(new_channel)
+
+    await add_presets(new_presets)
+
+    for dropped_channel in dropped_channels:
+        hardware.set_pwm(dropped_channel.pin, 0)
 
 
 # --------------------------------------------------------------- #
@@ -32,7 +63,7 @@ async def remove_conflicts(preset: Preset):
 @api.get('/channels')
 @doc.summary('Gets a list of channels on the physical device.')
 async def get_channels(request: Request):
-    return response.json(channels)
+    return response.json(config.hardware.channels)
 
 
 # --------------------------------------------------------------- #
@@ -52,9 +83,16 @@ async def get_presets(request: Request):
 @doc.summary('Creates a new preset with the given specifications. '
              'Any existing presets with conflicting channels are removed.')
 async def post_presets(request: Request):
-    preset = Preset(json.loads(request.body))
-    await remove_conflicts(preset)
-    presets.append(preset.start())
+    body = json.loads(request.body)
+    new_presets: List[Preset] = []
+
+    if isinstance(body, list):
+        for json_preset in body:
+            new_presets += Preset(json_preset)
+    else:
+        new_presets = [Preset(body)]
+
+    await put_presets(new_presets)
     return response.json({'status': 201, 'message': 'Created.'}, status=201)
 
 
