@@ -88,7 +88,7 @@ async def post_presets(request: Request):
 
     if isinstance(body, list):
         for json_preset in body:
-            new_presets += Preset(json_preset)
+            new_presets.append(Preset(json_preset))
     else:
         new_presets = [Preset(body)]
 
