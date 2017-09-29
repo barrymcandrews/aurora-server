@@ -56,6 +56,34 @@ async def put_presets(new_presets: List[Preset]):
         hardware.set_pwm(dropped_channel.pin, 0)
 
 
+async def remove_all_presets():
+    """Removes all presets from the list and sets their channels to off."""
+
+    for preset in presets:
+        await preset.stop()
+        for channel in preset.channels:
+            hardware.set_pwm(channel.pin, 0)
+        presets.remove(preset)
+
+
+async def remove_presets(ids: List[int]):
+    """Removes presets from the list with any of the given ids and
+    sets their channels to off.
+    """
+
+    dropped_channels: List[Channel] = []
+
+    for preset in presets:
+        if preset.id in ids:
+            await preset.stop()
+            for channel in preset.channels:
+                dropped_channels.append(channel)
+            presets.remove(preset)
+
+    for dropped_channel in dropped_channels:
+        hardware.set_pwm(dropped_channel.pin, 0)
+
+
 # --------------------------------------------------------------- #
 # API Route: /channels
 # --------------------------------------------------------------- #
@@ -99,9 +127,7 @@ async def post_presets(request: Request):
 @api.delete('/presets')
 @doc.summary('Stops all presets executing on the server.')
 async def delete_presets(request: Request):
-    for preset in presets:
-        await preset.stop()
-        presets.remove(preset)
+    await remove_all_presets()
     return response.json({'status': 201, 'message': 'Ok.'})
 
 
@@ -121,10 +147,8 @@ async def get(request: Request, preset_id):
 @api.delete('/presets/<preset_id:int>')
 @doc.summary('Removes a preset with a specific ID')
 async def delete(request: Request, preset_id):
-    for i in range(0, len(presets)):
-        for preset in presets:
-            if preset.id == int(preset_id):
-                await preset.stop()
-                presets.remove(preset)
-                return response.json({'status': 200, 'message': 'Deleted.'})
+    for preset in presets:
+        if preset.id == int(preset_id):
+            await remove_presets([preset_id])
+            return response.json({'status': 200, 'message': 'Deleted.'})
     raise NotFound('No preset exists with the given id.')
