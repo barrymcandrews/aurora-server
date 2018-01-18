@@ -11,6 +11,11 @@ config: Configuration = Configuration()
 setproctitle(config.core.process_name)
 
 
+@app.middleware('response')
+async def allow_cors(request, response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+
+
 if __name__ == '__main__':
     app.config.LOGO = config.core.logo
     app.add_task(protocols.read_fifo())
