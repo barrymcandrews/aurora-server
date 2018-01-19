@@ -85,6 +85,20 @@ async def remove_presets(ids: List[int]):
 
 
 # --------------------------------------------------------------- #
+# API Route: /
+# --------------------------------------------------------------- #
+
+@api.get('/')
+@doc.summary('Gets version information for api consumers')
+async def get_info(request: Request):
+    return response.json({
+        "name": config.core.serverName,
+        "description": config.core.description,
+        "version": config.core.version,
+    })
+
+
+# --------------------------------------------------------------- #
 # API Route: /channels
 # --------------------------------------------------------------- #
 
@@ -121,7 +135,11 @@ async def post_presets(request: Request):
         new_presets = [Preset(body)]
 
     await put_presets(new_presets)
-    return response.json({'status': 201, 'message': 'Created.'}, status=201)
+
+    psets = []
+    for preset in presets:
+        psets.append(preset.as_dict())
+    return response.json({'status': 201, 'message': 'Created.', 'presets': psets})
 
 
 @api.delete('/presets')
