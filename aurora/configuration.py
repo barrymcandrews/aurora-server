@@ -14,7 +14,9 @@ class Channel(object):
         self.__dict__ = d
 
     def __eq__(self, other):
-        return self.pin == other.pin
+        return self.pin == other.pin \
+               and self.label == other.label \
+               and self.device == other.device
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -30,6 +32,8 @@ class Configuration(object):
             self.debug: bool = config.getboolean(section, 'debug')
             self.openapi: bool = config.getboolean(section, 'openapi')
             self.process_name = "aurora-server"
+            self.serverName: str = config.get(section, 'serverName')
+            self.description: str = config.get(section, 'description')
             self.version = "2.1.0"
             self.logo = """
      ____       __         _______     ________   _______        ____
