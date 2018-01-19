@@ -20,8 +20,14 @@ class Preset:
             self.name: str = d['name']
 
             self.channels: List[Channel] = []
-            for channel in d['pins']:
-                self.channels.append(config.hardware.channels_dict[channel])
+            if 'pins' in d:
+                for pin in d['pins']:
+                    self.channels.append(config.hardware.channels_dict[pin])
+            elif 'channels' in d:
+                for channel in d['channels']:
+                    self.channels.append(Channel(channel))
+            else:
+                raise KeyError()
             self.verify_pins()
 
             self.payload: Dict = d['payload']
