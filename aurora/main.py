@@ -1,24 +1,36 @@
 #!/usr/bin/env python3.6
 from setproctitle import setproctitle
+import os
+import asyncio
 from sanic import Sanic
+from sanic_cors import CORS
 from sanic_openapi import swagger_blueprint, openapi_blueprint
 from aurora.configuration import Configuration
 from aurora import protocols
 from aurora.api import api
 
 app = Sanic(__name__)
+CORS(app)
 config: Configuration = Configuration()
 setproctitle(config.core.process_name)
+fifo_task: asyncio.Task = None
 
 
-@app.middleware('response')
-async def allow_cors(request, response):
-    response.headers["Access-Control-Allow-Origin"] = "*"
+@app.listener('before_server_start')
+def start_fifo_task(app, loop):
+    global fifo_task
+    fifo_task = loop.create_task(protocols.read_fifo())
+
+
+@app.listener('before_server_stop')
+async def stop_fifo_task(app, loop):
+    global fifo_task
+    fifo_task.cancel()
+    await fifo_task
 
 
 if __name__ == '__main__':
     app.config.LOGO = config.core.logo
-    app.add_task(protocols.read_fifo())
     app.blueprint(api)
 
     if config.core.openapi:
@@ -34,3 +46,4 @@ if __name__ == '__main__':
             port=config.core.port,
             workers=1,
             debug=config.core.debug)
+    os._exit(os.EX_OK)
