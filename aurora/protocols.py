@@ -40,7 +40,6 @@ def create_fifo():
         os.remove('/tmp/aurora-fifo')
     os.mkfifo('/tmp/aurora-fifo', mode=0o777)
     os.chmod('/tmp/aurora-fifo', mode=0o777)
-create_fifo()
 
 
 async def read_fifo():
