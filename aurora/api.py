@@ -56,14 +56,15 @@ async def put_presets(new_presets: List[Preset]):
         hardware.set_pwm(dropped_channel.pin, 0)
 
 
-async def remove_all_presets():
+@api.listener('before_server_stop')
+async def remove_all_presets(*args, **kwargs):
     """Removes all presets from the list and sets their channels to off."""
 
     for preset in presets:
         await preset.stop()
         for channel in preset.channels:
             hardware.set_pwm(channel.pin, 0)
-        presets.remove(preset)
+    presets.clear()
 
 
 async def remove_presets(ids: List[int]):
@@ -139,14 +140,14 @@ async def post_presets(request: Request):
     psets = []
     for preset in presets:
         psets.append(preset.as_dict())
-    return response.json({'status': 201, 'message': 'Created.', 'presets': psets})
+    return response.json({'status': 201, 'message': 'Created.', 'presets': psets}, status=201)
 
 
 @api.delete('/presets')
 @doc.summary('Stops all presets executing on the server.')
 async def delete_presets(request: Request):
     await remove_all_presets()
-    return response.json({'status': 201, 'message': 'Ok.'})
+    return response.json({'status': 200, 'message': 'Ok.'})
 
 
 # --------------------------------------------------------------- #
@@ -170,3 +171,15 @@ async def delete(request: Request, preset_id):
             await remove_presets([preset_id])
             return response.json({'status': 200, 'message': 'Deleted.'})
     raise NotFound('No preset exists with the given id.')
+
+
+# --------------------------------------------------------------- #
+# Handle to CORS preflight requests
+# --------------------------------------------------------------- #
+
+@api.options('/presets/<preset_id:int>')
+@api.options('/presets')
+async def empty_response(*args, **kwargs):
+    return response.text('', status=204)
+
+
