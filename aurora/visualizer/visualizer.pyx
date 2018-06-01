@@ -22,6 +22,9 @@ cdef class Visualizer(object):
         self.channels = channels
         self.num_channels = len(self.channels)
         self.decay = np.zeros(self.num_channels, dtype=np.float32)
+        if self.filter.custom_channel_frequencies != 0:
+            if self.filter.custom_channel_frequencies != self.num_channels + 1:
+                self.filter.custom_channel_frequencies = 0
         self.fft_calc = FFT(self.filter.chunk_size,
                             self.filter.sample_rate,
                             self.num_channels,

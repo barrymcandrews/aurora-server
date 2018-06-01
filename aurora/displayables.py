@@ -124,6 +124,7 @@ class VisualizerPreset(Displayable):
 
     def start(self, channels):
         AudioFilterProtocol.current_visualizer = Visualizer(channels, self.filter)
+        # TODO: Fit number of channels to the number of frequencies 
         return None
 
     def stop(self):
