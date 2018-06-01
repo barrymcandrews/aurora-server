@@ -26,9 +26,18 @@ class Preset:
             elif 'channels' in d:
                 for channel in d['channels']:
                     self.channels.append(Channel(channel))
+            elif 'devices' in d:
+                for channel in config.hardware.channels:
+                    if channel.device in d['devices']:
+                        self.channels.append(channel)
             else:
                 raise KeyError()
             self.verify_pins()
+
+            self.devices: List[str] = []
+            for channel in self.channels:
+                if channel.device not in self.devices:
+                    self.devices.append(channel.device)
 
             self.payload: Dict = d['payload']
             self.displayable: Displayable = displayables.factory(self.payload)
