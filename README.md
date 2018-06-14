@@ -77,8 +77,6 @@ $ sudo chmod +x aurora/main.py
 $ sudo ./aurora/main.py
 ```
 
-### *(Under Construction Beyond this Point)*
-
 ### Setting Colors and Patterns
 
 A very limited Swagger documentation page is also available by running the project and navigating to `localhost:5000/swagger`
@@ -124,7 +122,7 @@ Before you can set the lights to a color you need to know what lights are connec
 ```
 
 #### Managing Presets
-When setting the lights to a color or pattern you create a "preset" on the server. Presets are handled as [CRUD resources](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete) at the endpoint `/api/v2/presets`. 
+When setting the lights to a color or pattern you create a "preset" on the server. Presets are handled as [CRUD resources](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete) at the endpoint `/api/v2/presets`. Each preset contains a list of channels that the preset will be applied to, and a payload specifing how the preset should be displayed. 
 
 
 To get a list of all running presets on the server make a `GET` request to `/api/v2/presets`. 
@@ -160,18 +158,21 @@ To get a list of all running presets on the server make a `GET` request to `/api
             "green": 0
         }
     },
-    ...
 ]
 ```
+This response means that the device named "main" is set to the solid color blue.
 
-To create a new preset make a `POST` request to `/api/v2/presets`
+To create a new preset make a `POST` request to `/api/v2/presets`. For convience, you can provide device names instead of channels when creating presets. Note in the example below the "devices" key used instead of "channels". Listing a device is the same as listing all channels tagged with that device name. 
 
 
 ##### Sample POST Request to /api/v2/presets
 
 ```json
 {
-	"device": "led-strip-1",
+	"name": "complicated-preset",
+	"devices": [
+		"led-strip-1"
+		],
 	"payload": {
 		"type": "sequence",
    		"sequence": [
@@ -200,5 +201,94 @@ To create a new preset make a `POST` request to `/api/v2/presets`
       		}
    		]
 	}	
+}
+```
+Once you submit a preset post request, the server will begin to display the preset payload. If the preset you submitted conflicts with any existing presets, the existing presets will be stopped first.
+
+#### Preset Payloads
+The preset payload determines what will be displayed on the lights. You can display simple colors or more complicated patterns.
+
+There are four types of payloads:
+
+* Levels  
+* Fade
+* Sequence 
+* Visualizer
+
+Using these elements, you can create any possible pattern for your lights.
+
+##### Levels
+Levels are solid colors. In a levels payload, you must provide channel labels and their values. Usually a levels payload will contain red, green, and blue keys. However, depending on your hardware setup you could have other channel labels such as white.
+
+```json
+{
+	"type": "levels",
+	"red": 0,
+	"green": 0,
+	"blue": 0
+}
+```
+
+##### Fade
+Fades smoothly transition between two or more colors. In a fade payload, you must provide a list of levels to fade between. Once the fade is complete it will restart at the beginning. Note that the server does not fade between the last element and the first element when it loops back. 
+
+```json
+{
+	"type": "fade",
+	"delay": 5,
+	"levels": [
+		{
+			"type": "levels",
+			"red": 100,
+			"green": 0,
+			"blue": 0
+		},
+		{
+			"type": "levels",
+			"red": 0,
+			"green": 0,
+			"blue": 100
+		}
+	]
+}
+```
+
+##### Sequence
+Sequences are lists of other payloads. They display other payloads for a certain amount of time and then move on to the next one. Sequences can contain levels, fades, or other sequences.
+
+```json
+{
+   "type": "sequence",
+   "delay": 1,
+   "sequence": [
+   		{
+   			"type": "levels",
+   			"red": 100,
+   			"green": 0,
+   			"blue": 0
+   		},
+   		{
+   			"type": "levels",
+   			"red": 0,
+   			"green": 100,
+   			"blue": 0
+   		},
+   		{
+   			"type": "levels",
+   			"red": 0,
+   			"green": 0,
+   			"blue": 100
+   		}
+   	]
+}
+```
+
+##### Visualizer
+Visualizer payloads tell the server to display colors based on the music playing. The visualizer is very CPU intensive, so there can only be one visualizer preset on the server at a time.
+
+```json
+{
+	"type": "visualizer",
+	"filter": "classic"
 }
 ```
