@@ -6,7 +6,7 @@ from sanic import Sanic
 from sanic_cors import CORS
 from sanic_openapi import swagger_blueprint, openapi_blueprint
 from aurora.configuration import Configuration
-from aurora import protocols
+from aurora import protocols, lights
 from aurora.api import api
 
 app = Sanic(__name__)
@@ -27,6 +27,11 @@ async def stop_fifo_task(app, loop):
     global fifo_task
     fifo_task.cancel()
     await fifo_task
+
+
+@app.listener('before_server_stop')
+async def stop_presets(app, loop):
+    await lights.remove_all_presets()
 
 
 if __name__ == '__main__':
