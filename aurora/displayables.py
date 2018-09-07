@@ -21,42 +21,49 @@ hardware.enable(pins)
 
 class Displayable(object):
 
-    def __init__(self):
-        self.requires_loop = True
+    def __init__(self, repeats):
+        self.step = 0
+        self.total_steps = repeats
+        self.repeats_forever = (repeats < 0)
+
+    def increment_step(self):
+        self.step = (self.step + 1) % self.total_steps
+
+    def reset_step(self):
+        self.step = 0
 
     def start(self, channels) -> asyncio.Task:
-        return asyncio.ensure_future(self.display_in_loop(channels))
+        return asyncio.ensure_future(self.display(channels))
 
     def stop(self):
         pass
 
-    async def display_in_loop(self, channels: List[Channel]):
-        if self.requires_loop:
-            try:
-                while True:
-                    await self.display(channels)
-            except CancelledError:
-                pass
-            except KeyboardInterrupt:
-                pass
-        else:
-            await self.display(channels)
+    async def display(self, channels):
+        # try:
+        while self.repeats_forever or self.step < self.total_steps:
+            await self.display_step(channels)
+            self.increment_step()
+        # except CancelledError:
+        #     pass
+        # except KeyboardInterrupt:
+        #     pass
+        # finally:
+            self.reset_step()
 
     @abstractmethod
-    async def display(self, channels):
+    async def display_step(self, channels):
         pass
 
 
 class Levels(Displayable):
     def __init__(self, levels: Dict[str, int]):
-        super().__init__()
-        self.requires_loop = False
+        super().__init__(repeats=1)
         self.levels: Dict[str, int] = levels
         for label, value in levels.items():
             if not (0 <= value <= 100):
                 raise InvalidUsage('Level value not in range.')
 
-    async def display(self, channels):
+    async def display_step(self, channels):
         for label, value in self.levels.items():
             for ch in channels:
                 if ch.label == label:
@@ -64,12 +71,13 @@ class Levels(Displayable):
 
 
 class Fade(Displayable):
-    def __init__(self, items: List[Levels], delay: int):
-        super().__init__()
+    def __init__(self, items: List[Levels], delay: int, repeats: int):
+        super().__init__(repeats)
         self.items = items
         self.delay = delay
+        self.repeats = repeats
 
-    async def display(self, channels):
+    async def display_step(self, channels):
         colors = deepcopy(self.items)
 
         num_loops = len(colors) - 1
@@ -99,12 +107,13 @@ class Fade(Displayable):
 
 
 class Sequence(Displayable):
-    def __init__(self, items: List[Displayable], delay: int):
-        super().__init__()
+    def __init__(self, items: List[Displayable], delay: int, repeats: int):
+        super().__init__(repeats)
         self.items = items
         self.delay = delay
+        self.repeats = repeats
 
-    async def display(self, channels):
+    async def display_step(self, channels):
         for item in self.items:
             await item.display(channels)
             if isinstance(item, Levels):
@@ -113,7 +122,7 @@ class Sequence(Displayable):
 
 class VisualizerPreset(Displayable):
     def __init__(self, vis):
-        super().__init__()
+        super().__init__(repeats=1)
         self.visualizer = None
         self.filter = None
         for f in config.filters:
@@ -133,11 +142,19 @@ class VisualizerPreset(Displayable):
     async def display(self, channels: List[Channel]):
         pass
 
+    async def display_step(self, channels):
+        pass
 
-def factory(p: Dict[str, any]) -> Displayable:
+
+def factory(p: Dict[str, any], nested=False) -> Displayable:
     payload = deepcopy(p)
 
     try:
+        # when repeats is set to -1 the displayable should loop forever
+        # if no repeat amount is specified it will default to 1 unless it is the root
+        repeats = -1 if not nested else 1
+        repeats = p['repeats'] if 'repeats' in p else repeats
+
         disp_type = payload['type'].lower()
         payload.pop('type', 0)
         if disp_type == 'levels':
@@ -146,16 +163,16 @@ def factory(p: Dict[str, any]) -> Displayable:
         elif disp_type == 'fade':
             items: List[Levels] = []
             for sub in payload['levels']:
-                sub_disp = factory(sub)
+                sub_disp = factory(sub, True)
                 if type(sub_disp) is Levels:
                     items.append(sub_disp)
-            return Fade(items, payload['delay'])
+            return Fade(items, payload['delay'], repeats)
 
         elif disp_type == 'sequence':
             items: List[Displayable] = []
             for sub in payload['sequence']:
-                items.append(factory(sub))
-            return Sequence(items, payload['delay'])
+                items.append(factory(sub, True))
+            return Sequence(items, payload['delay'], repeats)
 
         elif disp_type == 'visualizer':
             return VisualizerPreset(payload)
