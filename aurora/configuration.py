@@ -34,7 +34,7 @@ class Configuration(object):
             self.process_name = "aurora-server"
             self.serverName: str = config.get(section, 'serverName')
             self.description: str = config.get(section, 'description')
-            self.version = "2.2.1"
+            self.version = "2.3.0"
             self.logo = """
      ____       __         _______     ________   _______        ____
     /    \     |  |       |_____  \   /   __   \ |_____  \      /    \ 
@@ -43,7 +43,7 @@ class Configuration(object):
  /  /     ___  |  |__|  |       \  \  |  |__|  |      \  \   /  /     ___ 
 /__/      \__\ \________/        \__\ \________/       \__\ /__/      \__\ 
 
-           --     Light Server     --     Version 2.2.1     --
+           --     Light Server     --     Version 2.3.0     --
 """
 
     class Hardware(object):

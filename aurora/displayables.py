@@ -27,7 +27,7 @@ class Displayable(object):
         self.repeats_forever = (repeats < 0)
 
     def increment_step(self):
-        self.step = (self.step + 1) % self.total_steps
+        self.step = self.step + 1
 
     def reset_step(self):
         self.step = 0
@@ -39,15 +39,13 @@ class Displayable(object):
         pass
 
     async def display(self, channels):
-        # try:
-        while self.repeats_forever or self.step < self.total_steps:
-            await self.display_step(channels)
-            self.increment_step()
-        # except CancelledError:
-        #     pass
-        # except KeyboardInterrupt:
-        #     pass
-        # finally:
+        try:
+            while self.repeats_forever or self.step < self.total_steps:
+                await self.display_step(channels)
+                self.increment_step()
+        except CancelledError:
+            raise CancelledError
+        finally:
             self.reset_step()
 
     @abstractmethod

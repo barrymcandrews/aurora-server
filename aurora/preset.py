@@ -58,7 +58,10 @@ class Preset:
         self.displayable.stop()
         if self.task is not None:
             self.task.cancel()
-            await self.task
+            try:
+                await self.task
+            except asyncio.CancelledError:
+                pass
         else:
             print('Warning: preset ' + str(self.id) + ' has no task to stop.')
 
