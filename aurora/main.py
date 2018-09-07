@@ -2,31 +2,30 @@
 from setproctitle import setproctitle
 import os
 import asyncio
+
+import uvloop
 from sanic import Sanic
-from sanic_cors import CORS
 from sanic_openapi import swagger_blueprint, openapi_blueprint
+from signal import signal, SIGINT
+
 from aurora.configuration import Configuration
 from aurora import protocols
 from aurora.api import api
+from aurora.api import remove_all_presets
 
 app = Sanic(__name__)
-CORS(app)
 config: Configuration = Configuration()
 setproctitle(config.core.process_name)
 fifo_task: asyncio.Task = None
+server_task: asyncio.Task = None
 
 
-@app.listener('before_server_start')
-def start_fifo_task(app, loop):
-    global fifo_task
-    fifo_task = loop.create_task(protocols.read_fifo())
-
-
-@app.listener('before_server_stop')
-async def stop_fifo_task(app, loop):
-    global fifo_task
+async def stop_fifo_task():
     fifo_task.cancel()
-    await fifo_task
+    try:
+        await fifo_task
+    except asyncio.CancelledError:
+        pass
 
 
 if __name__ == '__main__':
@@ -42,8 +41,23 @@ if __name__ == '__main__':
         app.config.API_PRODUCES_CONTENT_TYPES = ['application/json']
         app.config.API_CONTACT_EMAIL = 'bmcandrews@pitt.edu'
 
-    app.run(host=config.core.hostname,
-            port=config.core.port,
-            workers=1,
-            debug=config.core.debug)
-    os._exit(os.EX_OK)
+    server = app.create_server(host=config.core.hostname,
+                               port=config.core.port,
+                               debug=config.core.debug)
+
+    asyncio.set_event_loop(uvloop.new_event_loop())
+    loop = asyncio.get_event_loop()
+
+    server_task = asyncio.ensure_future(server)
+    fifo_task = loop.create_task(protocols.read_fifo())
+
+    signal(SIGINT, lambda s, f: loop.stop())
+
+    try:
+        loop.run_forever()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        loop.run_until_complete(remove_all_presets())
+        loop.run_until_complete(stop_fifo_task())
+        os._exit(0)

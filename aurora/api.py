@@ -56,8 +56,7 @@ async def put_presets(new_presets: List[Preset]):
         hardware.set_pwm(dropped_channel.pin, 0)
 
 
-@api.listener('before_server_stop')
-async def remove_all_presets(*args, **kwargs):
+async def remove_all_presets():
     """Removes all presets from the list and sets their channels to off."""
 
     for preset in presets:
