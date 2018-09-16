@@ -21,6 +21,9 @@ class Channel(object):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def __hash__(self):
+        return hash((self.pin, self.label, self.device))
+
 
 class Configuration(object):
 
@@ -32,6 +35,7 @@ class Configuration(object):
             self.debug: bool = config.getboolean(section, 'debug')
             self.openapi: bool = config.getboolean(section, 'openapi')
             self.process_name = "aurora-server"
+            self.enable_transitions: bool = config.getboolean(section, 'enableTransitions')
             self.serverName: str = config.get(section, 'serverName')
             self.description: str = config.get(section, 'description')
             self.version = "2.3.0"

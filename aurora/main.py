@@ -29,7 +29,7 @@ async def stop_fifo_task():
 
 @app.listener('before_server_stop')
 async def stop_presets(app, loop):
-    await lights.remove_all_presets()
+    await lights.clear_presets()
 
 
 if __name__ == '__main__':
@@ -62,6 +62,6 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         pass
     finally:
-        loop.run_until_complete(lights.remove_all_presets())
+        loop.run_until_complete(lights.clear_presets())
         loop.run_until_complete(stop_fifo_task())
         os._exit(0)

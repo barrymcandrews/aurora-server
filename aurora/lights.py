@@ -1,18 +1,15 @@
 from typing import List
 
 from aurora import hardware
-from aurora.configuration import Channel
+from aurora.configuration import Channel, Configuration
 from aurora.preset import Preset
 
-
+config: Configuration = Configuration()
 presets: List[Preset] = []
 
 
-async def add_presets(new_presets: List[Preset]):
-    """Starts and adds each preset to the Global List."""
-
-    for preset in new_presets:
-        presets.append(preset.start())
+async def put_preset(new_preset: Preset):
+    await put_presets([new_preset])
 
 
 async def put_presets(new_presets: List[Preset]):
@@ -24,29 +21,53 @@ async def put_presets(new_presets: List[Preset]):
     that aren't used by a new preset are set to off.
 
     """
-
+    dropped_presets: List[Preset] = []
     dropped_channels: List[Channel] = []
+    new_channels: List[Channel] = []
 
     for new_preset in new_presets:
-        for new_channel in new_preset.channels:
-            for running_preset in presets:
-                if new_channel in running_preset.channels:
-                    await running_preset.stop()
-                    presets.remove(running_preset)
-                    dropped_channels += running_preset.channels
+        for running_preset in presets:
 
-    for new_preset in new_presets:
-        for new_channel in new_preset.channels:
-            if new_channel in dropped_channels:
-                dropped_channels.remove(new_channel)
+            # If the new preset has needs a channel that is in use
+            if not set(running_preset.channels).isdisjoint(new_preset.channels):
+                dropped_presets.append(running_preset)
+                dropped_channels += set(running_preset.channels).difference(new_preset.channels)
 
-    await add_presets(new_presets)
+        new_channels += new_preset.channels
+
+    await remove_presets(dropped_presets, ignore_dropped=True)
+    await __add_presets(new_presets)
 
     for dropped_channel in dropped_channels:
         hardware.set_pwm(dropped_channel.pin, 0)
 
 
-async def remove_all_presets():
+async def remove_presets(running_presets: List[Preset], ignore_dropped=False):
+    """Stops the given presets' tasks then removes them. Sets dropped channels to
+    off unless ignore_dropped=True.
+    """
+    dropped_channels: List[Channel] = []
+
+    for preset in running_presets:
+        await preset.stop()
+        dropped_channels.extend(preset.channels)
+        presets.remove(preset)
+
+    if not ignore_dropped:
+        for dropped_channel in dropped_channels:
+            hardware.set_pwm(dropped_channel.pin, 0)
+
+
+async def remove_presets_by_id(ids: List[int], ignore_dropped=False):
+    """Removes presets from the list with any of the given ids.
+    Sets dropped channels to off unless ignore_dropped=True.
+    """
+
+    matching_presets = [x for x in presets if x.id in ids]
+    await remove_presets(matching_presets, ignore_dropped)
+
+
+async def clear_presets():
     """Removes all presets from the list and sets their channels to off."""
 
     for preset in presets:
@@ -56,19 +77,9 @@ async def remove_all_presets():
     presets.clear()
 
 
-async def remove_presets(ids: List[int]):
-    """Removes presets from the list with any of the given ids and
-    sets their channels to off.
-    """
+async def __add_presets(new_presets: List[Preset]):
+    """Starts and adds each preset to the Global List."""
 
-    dropped_channels: List[Channel] = []
+    for preset in new_presets:
+        presets.append(preset.start())
 
-    for preset in presets:
-        if preset.id in ids:
-            await preset.stop()
-            for channel in preset.channels:
-                dropped_channels.append(channel)
-            presets.remove(preset)
-
-    for dropped_channel in dropped_channels:
-        hardware.set_pwm(dropped_channel.pin, 0)

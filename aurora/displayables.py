@@ -38,6 +38,12 @@ class Displayable(object):
     def stop(self):
         pass
 
+    async def get_first_levels(self):
+        return {}
+
+    async def get_final_levels(self):
+        return {}
+
     async def display(self, channels):
         try:
             while self.repeats_forever or self.step < self.total_steps:
@@ -45,6 +51,8 @@ class Displayable(object):
                 self.increment_step()
         except CancelledError:
             raise CancelledError
+        except KeyboardInterrupt:
+            raise KeyboardInterrupt
         finally:
             self.reset_step()
 
@@ -61,6 +69,12 @@ class Levels(Displayable):
             if not (0 <= value <= 100):
                 raise InvalidUsage('Level value not in range.')
 
+    async def get_first_levels(self):
+        return self.levels
+
+    async def get_final_levels(self):
+        return self.levels
+
     async def display_step(self, channels):
         for label, value in self.levels.items():
             for ch in channels:
@@ -74,6 +88,12 @@ class Fade(Displayable):
         self.items = items
         self.delay = delay
         self.repeats = repeats
+
+    async def get_first_levels(self):
+        return self.items[0]
+
+    async def get_final_levels(self):
+        return self.items[len(self.items) - 1]
 
     async def display_step(self, channels):
         colors = deepcopy(self.items)
@@ -100,7 +120,7 @@ class Fade(Displayable):
                         if current_levels.levels[label] != next_levels.levels[label]:
                             current_levels.levels[label] += int(delta_levels[label] / abs(delta_levels[label]))
 
-                    await current_levels.display(channels)
+                    await current_levels.display_step(channels)
                     await asyncio.sleep(pause_time)
 
 
@@ -110,6 +130,12 @@ class Sequence(Displayable):
         self.items = items
         self.delay = delay
         self.repeats = repeats
+
+    async def get_first_levels(self):
+        return self.items[0].get_first_levels()
+
+    async def get_final_levels(self):
+        return self.items[len(self.items) - 1].get_final_levels()
 
     async def display_step(self, channels):
         for item in self.items:

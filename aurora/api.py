@@ -63,9 +63,9 @@ async def post_presets(request: Request):
 
     if isinstance(body, list):
         for json_preset in body:
-            new_presets.append(Preset(json_preset))
+            new_presets.append(Preset.from_dictionary(json_preset))
     else:
-        new_presets = [Preset(body)]
+        new_presets = [Preset.from_dictionary(body)]
 
     await lights.put_presets(new_presets)
 
@@ -78,7 +78,7 @@ async def post_presets(request: Request):
 @api.delete('/presets')
 @doc.summary('Stops all presets executing on the server.')
 async def delete_presets(request: Request):
-    await lights.remove_all_presets()
+    await lights.clear_presets()
     return response.json({'status': 200, 'message': 'Ok.'})
 
 
@@ -100,7 +100,7 @@ async def get(request: Request, preset_id):
 async def delete(request: Request, preset_id):
     for preset in lights.presets:
         if preset.id == int(preset_id):
-            await lights.remove_presets([preset_id])
+            await lights.remove_presets_by_id([preset_id])
             return response.json({'status': 200, 'message': 'Deleted.'})
     raise NotFound('No preset exists with the given id.')
 
