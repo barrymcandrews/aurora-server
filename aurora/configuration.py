@@ -36,6 +36,7 @@ class Configuration(object):
             self.openapi: bool = config.getboolean(section, 'openapi')
             self.process_name = "aurora-server"
             self.enable_transitions: bool = config.getboolean(section, 'enableTransitions')
+            self.transition_duration: float = config.getfloat(section, 'transitionDuration')
             self.serverName: str = config.get(section, 'serverName')
             self.description: str = config.get(section, 'description')
             self.version = "2.3.0"

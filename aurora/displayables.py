@@ -24,7 +24,7 @@ class Displayable(object):
     def __init__(self, repeats):
         self.step = 0
         self.total_steps = repeats
-        self.repeats_forever = (repeats < 0)
+        self.repeats_forever = (repeats <= 0)
 
     def increment_step(self):
         self.step = self.step + 1
@@ -38,10 +38,10 @@ class Displayable(object):
     def stop(self):
         pass
 
-    async def get_first_levels(self):
+    def get_first_levels(self):
         return {}
 
-    async def get_final_levels(self):
+    def get_current_levels(self):
         return {}
 
     async def display(self, channels):
@@ -69,10 +69,10 @@ class Levels(Displayable):
             if not (0 <= value <= 100):
                 raise InvalidUsage('Level value not in range.')
 
-    async def get_first_levels(self):
+    def get_first_levels(self):
         return self.levels
 
-    async def get_final_levels(self):
+    def get_current_levels(self):
         return self.levels
 
     async def display_step(self, channels):
@@ -88,12 +88,13 @@ class Fade(Displayable):
         self.items = items
         self.delay = delay
         self.repeats = repeats
+        self.current_levels: Levels = self.items[0]
 
-    async def get_first_levels(self):
-        return self.items[0]
+    def get_first_levels(self):
+        return self.items[0].levels
 
-    async def get_final_levels(self):
-        return self.items[len(self.items) - 1]
+    def get_current_levels(self):
+        return self.current_levels.levels
 
     async def display_step(self, channels):
         colors = deepcopy(self.items)
@@ -103,11 +104,11 @@ class Fade(Displayable):
             for i in range(0, num_loops, 1):
                 next_index = i + 1 if i < len(colors) - 1 else 0
 
-                current_levels = colors[i]
+                self.current_levels = colors[i]
                 next_levels = colors[next_index]
                 delta_levels = dict()
                 num_changes = 0
-                for label, value in current_levels.levels.items():
+                for label, value in self.current_levels.levels.items():
                     delta_levels[label] = next_levels.levels[label] - value
                     num_changes = max(num_changes, abs(delta_levels[label]))
 
@@ -116,11 +117,11 @@ class Fade(Displayable):
                 pause_time = self.delay / num_changes
 
                 for j in range(0, num_changes):
-                    for label, value in current_levels.levels.items():
-                        if current_levels.levels[label] != next_levels.levels[label]:
-                            current_levels.levels[label] += int(delta_levels[label] / abs(delta_levels[label]))
+                    for label, value in self.current_levels.levels.items():
+                        if self.current_levels.levels[label] != next_levels.levels[label]:
+                            self.current_levels.levels[label] += int(delta_levels[label] / abs(delta_levels[label]))
 
-                    await current_levels.display_step(channels)
+                    await self.current_levels.display_step(channels)
                     await asyncio.sleep(pause_time)
 
 
@@ -130,15 +131,17 @@ class Sequence(Displayable):
         self.items = items
         self.delay = delay
         self.repeats = repeats
+        self.current_item: Displayable = self.items[0]
 
-    async def get_first_levels(self):
+    def get_first_levels(self):
         return self.items[0].get_first_levels()
 
-    async def get_final_levels(self):
-        return self.items[len(self.items) - 1].get_final_levels()
+    def get_current_levels(self):
+        return self.current_item.get_current_levels()
 
     async def display_step(self, channels):
         for item in self.items:
+            self.current_item = item
             await item.display(channels)
             if isinstance(item, Levels):
                 await asyncio.sleep(self.delay)

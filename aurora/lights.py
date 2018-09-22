@@ -2,10 +2,17 @@ from typing import List
 
 from aurora import hardware
 from aurora.configuration import Channel, Configuration
-from aurora.preset import Preset
+from aurora.preset import Preset, TransitionPreset
 
 config: Configuration = Configuration()
 presets: List[Preset] = []
+
+
+async def add_presets(new_presets: List[Preset]):
+    """Starts and adds each preset to the Global List."""
+
+    for preset in new_presets:
+        presets.append(preset.start())
 
 
 async def put_preset(new_preset: Preset):
@@ -35,8 +42,11 @@ async def put_presets(new_presets: List[Preset]):
 
         new_channels += new_preset.channels
 
+    if config.core.enable_transitions:
+        new_presets = [TransitionPreset(new_presets, dropped_presets)]
+
     await remove_presets(dropped_presets, ignore_dropped=True)
-    await __add_presets(new_presets)
+    await add_presets(new_presets)
 
     for dropped_channel in dropped_channels:
         hardware.set_pwm(dropped_channel.pin, 0)
@@ -47,6 +57,7 @@ async def remove_presets(running_presets: List[Preset], ignore_dropped=False):
     off unless ignore_dropped=True.
     """
     dropped_channels: List[Channel] = []
+    cancelled_presets = running_presets.copy()
 
     for preset in running_presets:
         await preset.stop()
@@ -54,8 +65,12 @@ async def remove_presets(running_presets: List[Preset], ignore_dropped=False):
         presets.remove(preset)
 
     if not ignore_dropped:
-        for dropped_channel in dropped_channels:
-            hardware.set_pwm(dropped_channel.pin, 0)
+        if config.core.enable_transitions:
+            transition = TransitionPreset([], cancelled_presets)
+            await add_presets([transition])
+        else:
+            for dropped_channel in dropped_channels:
+                hardware.set_pwm(dropped_channel.pin, 0)
 
 
 async def remove_presets_by_id(ids: List[int], ignore_dropped=False):
@@ -70,16 +85,6 @@ async def remove_presets_by_id(ids: List[int], ignore_dropped=False):
 async def clear_presets():
     """Removes all presets from the list and sets their channels to off."""
 
-    for preset in presets:
-        await preset.stop()
-        for channel in preset.channels:
-            hardware.set_pwm(channel.pin, 0)
+    await remove_presets(presets)
     presets.clear()
-
-
-async def __add_presets(new_presets: List[Preset]):
-    """Starts and adds each preset to the Global List."""
-
-    for preset in new_presets:
-        presets.append(preset.start())
 

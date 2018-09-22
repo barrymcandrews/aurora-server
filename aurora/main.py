@@ -11,6 +11,7 @@ from signal import signal, SIGINT
 from aurora.configuration import Configuration
 from aurora import protocols, lights
 from aurora.api import api
+from aurora import hardware
 
 app = Sanic(__name__)
 config: Configuration = Configuration()
@@ -25,11 +26,6 @@ async def stop_fifo_task():
         await fifo_task
     except asyncio.CancelledError:
         pass
-
-
-@app.listener('before_server_stop')
-async def stop_presets(app, loop):
-    await lights.clear_presets()
 
 
 if __name__ == '__main__':
@@ -64,4 +60,5 @@ if __name__ == '__main__':
     finally:
         loop.run_until_complete(lights.clear_presets())
         loop.run_until_complete(stop_fifo_task())
+        hardware.disable([c.pin for c in config.hardware.channels])
         os._exit(0)
