@@ -43,7 +43,7 @@ async def put_presets(new_presets: List[Preset]):
         new_channels += new_preset.channels
 
     if config.core.enable_transitions:
-        new_presets = [TransitionPreset(new_presets, dropped_presets)]
+        new_presets = [TransitionPreset(dropped_presets, new_presets)]
 
     await remove_presets(dropped_presets, ignore_dropped=True)
     await add_presets(new_presets)
@@ -66,7 +66,7 @@ async def remove_presets(running_presets: List[Preset], ignore_dropped=False):
 
     if not ignore_dropped:
         if config.core.enable_transitions:
-            transition = TransitionPreset([], cancelled_presets)
+            transition = TransitionPreset(cancelled_presets, [])
             await add_presets([transition])
         else:
             for dropped_channel in dropped_channels:
@@ -85,6 +85,37 @@ async def remove_presets_by_id(ids: List[int], ignore_dropped=False):
 async def clear_presets():
     """Removes all presets from the list and sets their channels to off."""
 
-    await remove_presets(presets)
+    dropped_channels: List[Channel] = []
+    cancelled_presets = presets.copy()
+
+    for preset in presets:
+        await preset.stop()
+        dropped_channels.extend(preset.channels)
+        presets.remove(preset)
+
+    if config.core.enable_transitions:
+        transition = TransitionPreset(cancelled_presets, [])
+        await add_presets([transition])
+    else:
+        for dropped_channel in dropped_channels:
+            hardware.set_pwm(dropped_channel.pin, 0)
     presets.clear()
+
+
+def _create_transition_presets(old_presets: List[Preset], new_presets: List[Preset]) -> List[TransitionPreset]:
+    transitions = []
+
+    if len(old_presets) > len(new_presets):
+        for old_preset in old_presets:
+            old_channels = set(old_preset.channels)
+            intersecting = [preset for preset in new_presets if not old_channels.isdisjoint(preset.channels)]
+            transitions.append(TransitionPreset([old_preset], intersecting))
+    else:
+        for new_preset in new_presets:
+            new_channels = set(new_preset.channels)
+            intersecting = [preset for preset in old_presets if not new_channels.isdisjoint(preset.channels)]
+            transitions.append(TransitionPreset(intersecting, [new_preset]))
+
+    return transitions
+
 

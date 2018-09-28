@@ -27,7 +27,7 @@ For a simple hardware setup, follow [this tutorial](http://dordnung.de/raspberry
 
 #### Python
 
-Before running the project you need to install python 3.6. To do this you need to build the latest version from source.
+Before running the project you need to install python 3.6 (or later). To do this you need to build the latest version from source.
 
 1. Install the following build tools on your system.
 
@@ -157,7 +157,7 @@ To get a list of all running presets on the server make a `GET` request to `/api
             "red": 0,
             "green": 0
         }
-    },
+    }
 ]
 ```
 This response means that the device named "main" is set to the solid color blue.

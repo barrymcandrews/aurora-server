@@ -1,3 +1,4 @@
+import math
 from abc import abstractmethod
 from asyncio import CancelledError
 from copy import deepcopy
@@ -100,29 +101,36 @@ class Fade(Displayable):
         colors = deepcopy(self.items)
 
         num_loops = len(colors) - 1
-        if num_loops > 0:
-            for i in range(0, num_loops, 1):
-                next_index = i + 1 if i < len(colors) - 1 else 0
+        for i in range(0, num_loops, 1):
+            next_index = i + 1 if i < len(colors) - 1 else 0
 
-                self.current_levels = colors[i]
-                next_levels = colors[next_index]
-                delta_levels = dict()
-                num_changes = 0
-                for label, value in self.current_levels.levels.items():
-                    delta_levels[label] = next_levels.levels[label] - value
-                    num_changes = max(num_changes, abs(delta_levels[label]))
+            self.current_levels = colors[i]
+            next_levels = colors[next_index]
+            delta_levels = dict()
+            num_changes = 0
+            for label, value in self.current_levels.levels.items():
+                delta_levels[label] = next_levels.levels[label] - value
+                num_changes = max(num_changes, abs(delta_levels[label]))
 
-                if num_changes == 0:
-                    continue
-                pause_time = self.delay / num_changes
+            if num_changes == 0:
+                continue
 
-                for j in range(0, num_changes):
-                    for label, value in self.current_levels.levels.items():
-                        if self.current_levels.levels[label] != next_levels.levels[label]:
-                            self.current_levels.levels[label] += int(delta_levels[label] / abs(delta_levels[label]))
+            color_fns = {}
+            for label, value in self.current_levels.levels.items():
+                color_fns[label] = Fade.__create_fade_fn(next_levels.levels[label], value, num_changes)
 
-                    await self.current_levels.display_step(channels)
-                    await asyncio.sleep(pause_time)
+            pause_time = self.delay / num_changes
+            for j in range(0, num_changes + 1):
+                for label in self.current_levels.levels:
+                    self.current_levels.levels[label] = color_fns[label](j)
+
+                await self.current_levels.display_step(channels)
+                await asyncio.sleep(pause_time)
+
+    @staticmethod
+    def __create_fade_fn(finish, start, num_changes):
+        delta = (finish - start) / num_changes
+        return lambda step: int(math.floor(float(start) + (delta * float(step))))
 
 
 class Sequence(Displayable):

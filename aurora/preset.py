@@ -86,9 +86,9 @@ class Preset(object):
 
 class TransitionPreset(Preset):
 
-    def __init__(self, new_presets, old_presets):
+    def __init__(self, old_presets, new_presets):
         self.new_presets = new_presets
-        self.cancelled_presets = old_presets
+        self.old_presets = old_presets
         self.combined_channels = []
         self.combined_name = "transition"
 
@@ -120,7 +120,7 @@ class TransitionPreset(Preset):
 
     def __create_transition(self) -> Displayable:
         old_levels_dict = {}
-        for cancelled_p in self.cancelled_presets:
+        for cancelled_p in self.old_presets:
             old_levels_dict.update(cancelled_p.displayable.get_current_levels())
 
         new_levels_dict = {}
