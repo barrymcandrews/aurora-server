@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python3.7
 from setproctitle import setproctitle
 import os
 import asyncio
@@ -6,29 +6,23 @@ import asyncio
 import uvloop
 from sanic import Sanic
 from sanic_openapi import swagger_blueprint, openapi_blueprint
+from sanic_cors import CORS, cross_origin
 from signal import signal, SIGINT
 
 from aurora.configuration import Configuration
-from aurora import protocols, lights
+from aurora import protocols
 from aurora.api import api
 from aurora import hardware
 
 app = Sanic(__name__)
+CORS(app, automatic_options=True)
 config: Configuration = Configuration()
 setproctitle(config.core.process_name)
 fifo_task: asyncio.Task = None
 server_task: asyncio.Task = None
 
 
-async def stop_fifo_task():
-    fifo_task.cancel()
-    try:
-        await fifo_task
-    except asyncio.CancelledError:
-        pass
-
-
-if __name__ == '__main__':
+def main():
     app.config.LOGO = config.core.logo
     app.blueprint(api)
 
@@ -58,7 +52,9 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         pass
     finally:
-        loop.run_until_complete(lights.clear_presets())
-        loop.run_until_complete(stop_fifo_task())
         hardware.disable([c.pin for c in config.hardware.channels])
         os._exit(0)
+
+
+if __name__ == "__main__":
+    main()

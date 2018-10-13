@@ -1,0 +1,15 @@
+# Aurora Server Service Configuration File
+#
+# When the project is installed through setup.py, this
+# file is copied to /etc/systemd/system
+
+[Unit]
+Description=Aurora Light Service
+
+[Service]
+Restart=always
+ExecStart=/usr/local/bin/aurora
+Nice=-20
+
+[Install]
+WantedBy=multi-user.target
