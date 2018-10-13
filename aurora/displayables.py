@@ -6,7 +6,7 @@ from typing import Dict, List
 import asyncio
 from sanic.exceptions import InvalidUsage
 from aurora.configuration import Channel, Configuration
-from aurora.protocols import AudioFilterProtocol
+from aurora.protocols import AudioFifoProtocol
 
 import pyximport
 pyximport.install()
@@ -167,12 +167,16 @@ class VisualizerPreset(Displayable):
             self.filter = config.Filter(None)
 
     def start(self, channels):
-        AudioFilterProtocol.current_visualizer = Visualizer(channels, self.filter)
-        # TODO: Fit number of channels to the number of frequencies 
+        if self.filter.custom_channel_frequencies != 0:
+            num_frequency_bins = len(self.filter.custom_channel_frequencies) - 1
+            if len(channels) != num_frequency_bins:
+                raise KeyError('This filter requires exactly ' + str(num_frequency_bins) + ' channels.')
+
+        AudioFifoProtocol.current_visualizer = Visualizer(channels, self.filter)
         return None
 
     def stop(self):
-        AudioFilterProtocol.current_visualizer = None
+        AudioFifoProtocol.current_visualizer = None
 
     async def display(self, channels: List[Channel]):
         pass

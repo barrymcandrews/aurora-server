@@ -27,7 +27,7 @@ For a simple hardware setup, follow [this tutorial](http://dordnung.de/raspberry
 
 #### Python
 
-Before running the project you need to install python 3.6 (or later). To do this you need to build the latest version from source.
+Before running the project you need to install python 3.7 (or later). To do this you need to build the latest version from source.
 
 1. Install the following build tools on your system.
 
@@ -38,15 +38,15 @@ Before running the project you need to install python 3.6 (or later). To do this
 2. Download and install the latest version of python from source. Replace the url in the wget command with the latest version from the [official site](https://www.python.org/downloads/source/).
 
 	```
-	$ wget https://www.python.org/ftp/python/3.6.0/Python-3.6.0.tar.xz
-	$ tar xf Python-3.6.0.tar.xz
-	$ cd Python-3.6.0
+	$ https://www.python.org/ftp/python/3.7.0/Python-3.7.0.tgz
+	$ tar -xzf Python-3.7.0.tgz
+	$ cd Python-3.7.0
 	$ ./configure
-	$ make
-	$ sudo make altinstall
+	$ make -j4
+	$ sudo make install
 	```
 
-#### Audio Source (Mopidy)
+#### Audio Source
 This server reads audio for the visualizer from a UNIX named pipe or FIFO. Any program that is capable of outputting audio to a FIFO can be used as the audio source. In my examples, I use Mopidy since it can stream from Spotify, SoundCloud and Google Music. You can see instructions on how to install Mopidy [here](https://docs.mopidy.com/en/latest/installation/). I also provide an example configuration file for mopidy located at `config/mopidy.conf`.
 
 ### Installation
@@ -60,22 +60,32 @@ $ git clone https://github.com/barrymcandrews/aurora-server.git
 $ git clone git@github.com:barrymcandrews/aurora-server.git
 ```
 
-Next, build the project with Cython and install the dependencies:
+Next, install the dependencies, build and install the project:
 
 ```
 $ cd aurora-server
-$ sudo python3.6 setup.py build_ext --inplace
+$ sudo python3 setup.py build
+$ sudo python3 setup.py install
 ```
 
 
 ## How to Use
 
-To start the server execute the file `aurora/main.py` with root privileges:
+To start the server manually just run the `aurora` command:
 
+```bash
+$ sudo aurora
 ```
-$ sudo chmod +x aurora/main.py
-$ sudo ./aurora/main.py
+
+You can also use aurora as a systemd service:
+
+```bash
+$ sudo systemctl enable aurora
+$ sudo systemctl start aurora
 ```
+
+
+
 
 ### Setting Colors and Patterns
 

@@ -2,27 +2,12 @@ import os
 import json
 from configparser import RawConfigParser
 from typing import List, Dict
+from aurora.channels import Channel
 
-config_dir_path = os.path.dirname(os.path.realpath(__file__)) + '/../config/'
-
-
-class Channel(object):
-    def __init__(self, d):
-        self.pin: int = None
-        self.label: str = None
-        self.device: str = None
-        self.__dict__ = d
-
-    def __eq__(self, other):
-        return self.pin == other.pin \
-               and self.label == other.label \
-               and self.device == other.device
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-    def __hash__(self):
-        return hash((self.pin, self.label, self.device))
+if os.path.exists('/etc/aurora.conf'):
+    config_dir_path = '/etc/'
+else:
+    config_dir_path = os.path.dirname(os.path.realpath(__file__)) + '/../config/'
 
 
 class Configuration(object):
@@ -60,6 +45,15 @@ class Configuration(object):
                 self.channels.append(Channel(json_pin))
                 self.channels_dict[int(json_pin['pin'])] = Channel(json_pin)
 
+    class Audio(object):
+        def __init__(self, config: RawConfigParser):
+            section = 'audio'
+            self.fifo_path = config.get(section, 'fifoPath')
+            self.play_audio = config.getboolean(section, 'playAudio')
+            self.sample_rate = config.getint(section, 'sampleRate')
+            self.chunk_size = config.getint(section, 'chunkSize')
+            self.audio_channels = config.getint(section, 'audioChannels')
+
     class Filter(object):
         def __init__(self, d):
             self.name = 'default'
@@ -67,7 +61,7 @@ class Configuration(object):
             self.sd_low = 0.4
             self.sd_high = 0.85
             self.decay_factor = 0
-            self.delay = 1.0
+            self.delay = 0.0
             self.chunk_size = 2048
             self.sample_rate = 48000
             self.min_frequency = 20
@@ -76,7 +70,7 @@ class Configuration(object):
             self.custom_channel_frequencies = 0
             self.input_channels = 2
             if d is not None:
-                self.__dict__ = d
+                self.__dict__.update(d)
 
     def __init__(self):
         config = RawConfigParser()
@@ -84,6 +78,7 @@ class Configuration(object):
 
         self.core = Configuration.Core(config)
         self.hardware = Configuration.Hardware(config)
+        self.audio = Configuration.Audio(config)
 
         self.filters = []
         for v_dict in json.loads(config.get('visualizer', 'filters')):
