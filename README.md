@@ -9,12 +9,12 @@ After buying an [LED Light Strip](https://www.amazon.com/gp/product/B00DTOAWZ2/r
 Aurora addresses these issues with a unified REST API. The API allows you to display:
 
 * Static Presets (All the functionality of the IR remote)
-	* Solid colors 
-	* Fades between two or more colors
-	* Sequences containing colors, fades or other sequences
+    * Solid colors 
+    * Fades between two or more colors
+    * Sequences containing colors, fades or other sequences
 * Music Visualization (based on [LightshowPi](lightshowpi.org)) 
-	* Uses spectrum analysis to generate colors from music.
-	* Music can be sourced from any program capable of writing audio to a FIFO. In my examples I use [Mopidy](https://www.mopidy.com/) since it can stream music from Spotify, SoundCloud, and Google Play.
+    * Uses spectrum analysis to generate colors from music.
+    * Music can be sourced from any program capable of writing audio to a FIFO. In my examples I use [Mopidy](https://www.mopidy.com/) since it can stream music from Spotify, SoundCloud, and Google Play.
 
 
 ## Getting Started
@@ -31,20 +31,20 @@ Before running the project you need to install python 3.7 (or later). To do this
 
 1. Install the following build tools on your system.
 
-	```
-	$ sudo apt-get update
-	$ sudo apt-get install build-essential tk-dev libncurses5-dev libncursesw5-dev libreadline6-dev libdb5.3-dev libgdbm-dev libsqlite3-dev libssl-dev libbz2-dev libexpat1-dev liblzma-dev zlib1g-dev
-	```
+    ```
+    $ sudo apt-get update
+    $ sudo apt-get install build-essential tk-dev libncurses5-dev libncursesw5-dev libreadline6-dev libdb5.3-dev libgdbm-dev libsqlite3-dev libssl-dev libbz2-dev libexpat1-dev liblzma-dev zlib1g-dev
+    ```
 2. Download and install the latest version of python from source. Replace the url in the wget command with the latest version from the [official site](https://www.python.org/downloads/source/).
 
-	```
-	$ https://www.python.org/ftp/python/3.7.0/Python-3.7.0.tgz
-	$ tar -xzf Python-3.7.0.tgz
-	$ cd Python-3.7.0
-	$ ./configure
-	$ make -j4
-	$ sudo make install
-	```
+    ```
+    $ https://www.python.org/ftp/python/3.7.0/Python-3.7.0.tgz
+    $ tar -xzf Python-3.7.0.tgz
+    $ cd Python-3.7.0
+    $ ./configure
+    $ make -j4
+    $ sudo make install
+    ```
 
 #### Audio Source
 This server reads audio for the visualizer from a UNIX named pipe or FIFO. Any program that is capable of outputting audio to a FIFO can be used as the audio source. In my examples, I use Mopidy since it can stream from Spotify, SoundCloud and Google Music. You can see instructions on how to install Mopidy [here](https://docs.mopidy.com/en/latest/installation/). I also provide an example configuration file for mopidy located at `config/mopidy.conf`.
@@ -179,38 +179,38 @@ To create a new preset make a `POST` request to `/api/v2/presets`. For convience
 
 ```json
 {
-	"name": "complicated-preset",
-	"devices": [
-		"led-strip-1"
-		],
-	"payload": {
-		"type": "sequence",
-   		"sequence": [
-      		{
-         		"type": "levels",
-         		"red": 100,
-         		"green": 0,
-         		"blue": 50
-      		},
-      		{
-         		"type": "fade",
-         		"levels": [
-            		{
-            			"type": "levels",
-               			"red": 100,
-               			"green": 100,
-               			"blue": 50
-            		},
-            		{
-            			"type": "levels",
-               			"red": 0,
-               			"green": 0,
-               			"blue": 0
-            		}
-         		]
-      		}
-   		]
-	}	
+    "name": "complicated-preset",
+    "devices": [
+        "led-strip-1"
+        ],
+    "payload": {
+        "type": "sequence",
+        "sequence": [
+            {
+                "type": "levels",
+                "red": 100,
+                "green": 0,
+                "blue": 50
+            },
+            {
+                "type": "fade",
+                "levels": [
+                    {
+                        "type": "levels",
+                        "red": 100,
+                        "green": 100,
+                        "blue": 50
+                    },
+                    {
+                        "type": "levels",
+                        "red": 0,
+                        "green": 0,
+                        "blue": 0
+                    }
+                ]
+            }
+        ]
+    }	
 }
 ```
 Once you submit a preset post request, the server will begin to display the preset payload. If the preset you submitted conflicts with any existing presets, the existing presets will be stopped first.
@@ -232,10 +232,10 @@ Levels are solid colors. In a levels payload, you must provide channel labels an
 
 ```json
 {
-	"type": "levels",
-	"red": 0,
-	"green": 0,
-	"blue": 0
+    "type": "levels",
+    "red": 0,
+    "green": 0,
+    "blue": 0
 }
 ```
 
@@ -244,22 +244,22 @@ Fades smoothly transition between two or more colors. In a fade payload, you mus
 
 ```json
 {
-	"type": "fade",
-	"delay": 5,
-	"levels": [
-		{
-			"type": "levels",
-			"red": 100,
-			"green": 0,
-			"blue": 0
-		},
-		{
-			"type": "levels",
-			"red": 0,
-			"green": 0,
-			"blue": 100
-		}
-	]
+    "type": "fade",
+    "delay": 5,
+    "levels": [
+        {
+            "type": "levels",
+            "red": 100,
+            "green": 0,
+            "blue": 0
+        },
+        {
+            "type": "levels",
+            "red": 0,
+            "green": 0,
+            "blue": 100
+        }
+    ]
 }
 ```
 
@@ -271,25 +271,25 @@ Sequences are lists of other payloads. They display other payloads for a certain
    "type": "sequence",
    "delay": 1,
    "sequence": [
-   		{
-   			"type": "levels",
-   			"red": 100,
-   			"green": 0,
-   			"blue": 0
-   		},
-   		{
-   			"type": "levels",
-   			"red": 0,
-   			"green": 100,
-   			"blue": 0
-   		},
-   		{
-   			"type": "levels",
-   			"red": 0,
-   			"green": 0,
-   			"blue": 100
-   		}
-   	]
+        {
+            "type": "levels",
+            "red": 100,
+            "green": 0,
+            "blue": 0
+        },
+        {
+            "type": "levels",
+            "red": 0,
+            "green": 100,
+            "blue": 0
+        },
+        {
+            "type": "levels",
+            "red": 0,
+            "green": 0,
+            "blue": 100
+        }
+    ]
 }
 ```
 
@@ -298,7 +298,7 @@ Visualizer payloads tell the server to display colors based on the music playing
 
 ```json
 {
-	"type": "visualizer",
-	"filter": "classic"
+    "type": "visualizer",
+    "filter": "classic"
 }
 ```
