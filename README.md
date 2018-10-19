@@ -14,12 +14,12 @@ Aurora addresses these issues with a unified REST API. The API allows you to dis
     * Sequences containing colors, fades or other sequences
 * Music Visualization (based on [LightshowPi](lightshowpi.org)) 
     * Uses spectrum analysis to generate colors from music.
-    * Music can be sourced from any program capable of writing audio to a FIFO. In my examples I use [Mopidy](https://www.mopidy.com/) since it can stream music from Spotify, SoundCloud, and Google Play.
+    * Music can be sourced from any program capable of writing audio to a FIFO (e.g., [Raspotify](https://github.com/dtcooper/raspotify), [Mopidy](https://www.mopidy.com/)).
 
 
 ## Getting Started
 
-### Prerequisities
+### Prerequisites
 This project was designed specifically to run on a Raspberry Pi. It's been confirmed to work on the Raspberry Pi 3 and Zero, but should work on any model.
 
 #### Hardware
@@ -47,7 +47,12 @@ Before running the project you need to install python 3.7 (or later). To do this
     ```
 
 #### Audio Source
-This server reads audio for the visualizer from a UNIX named pipe or FIFO. Any program that is capable of outputting audio to a FIFO can be used as the audio source. In my examples, I use Mopidy since it can stream from Spotify, SoundCloud and Google Music. You can see instructions on how to install Mopidy [here](https://docs.mopidy.com/en/latest/installation/). I also provide an example configuration file for mopidy located at `config/mopidy.conf`.
+This server reads audio for the visualizer from a UNIX named pipe or FIFO. Any program that is capable of outputting audio to a FIFO can be used as the audio source. Some examples are:
+
+* [Raspotify](https://github.com/dtcooper/raspotify)  ―  A client for Spotify Connect
+* [Mopidy](https://www.mopidy.com/) ― A music server that can stream from Spotify, SoundCloud, Google Play Music, and more.
+
+In the end, it doesn't matter what program you use as long as it writes audio to the FIFO specified in the config file. The default location is `/tmp/aurora-fifo`  
 
 ### Installation
 
@@ -68,18 +73,22 @@ $ sudo python3 setup.py build
 $ sudo python3 setup.py install
 ```
 
+#### Configuration
+
+Aurora Server's configuration file is located at `/etc/aurora.conf`. There you can specify your hardware setup. You can also change settings related to the visualizer. For a full description of all configuration options see the comments in the example config file.
+
 
 ## How to Use
 
 To start the server manually just run the `aurora` command:
 
-```bash
+```
 $ sudo aurora
 ```
 
 You can also use aurora as a systemd service:
 
-```bash
+```
 $ sudo systemctl enable aurora
 $ sudo systemctl start aurora
 ```
