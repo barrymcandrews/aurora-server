@@ -78,73 +78,10 @@ class Preset(object):
             print('Warning: preset ' + str(self.id) + ' has no task to stop.')
 
     def as_dict(self):
-        dict_rep = self.__dict__.copy()
-        dict_rep.pop('displayable', 0)
-        dict_rep.pop('task', 0)
-        return dict_rep
-
-
-class TransitionPreset(Preset):
-
-    def __init__(self, old_presets, new_presets):
-        self.new_presets = new_presets
-        self.old_presets = old_presets
-        self.combined_channels = []
-        self.combined_name = "transition"
-
-        for preset in new_presets:
-            self.combined_name += "-" + preset.name
-
-        for preset in new_presets + old_presets:
-            self.combined_channels.extend(preset.channels)
-
-        payload = {
-            'type': 'transition',
-            'from': [p.as_dict() for p in old_presets],
-            'to': [p.as_dict() for p in new_presets]
+        return {
+            "id": self.id,
+            "name": self.name,
+            "channels": self.channels,
+            "devices": self.devices,
+            "payload": self.payload
         }
-
-        super(TransitionPreset, self).__init__(self.combined_name,
-                                               self.combined_channels,
-                                               payload,
-                                               self.__create_transition())
-
-    def start(self):
-        self.task = asyncio.ensure_future(self.execute_then_replace())
-        return self
-
-    async def execute_then_replace(self):
-        await self.displayable.display(self.channels)
-        await lights.remove_presets([self], ignore_dropped=True)
-        await lights.add_presets(self.new_presets)
-
-    def __create_transition(self) -> Displayable:
-        old_levels_dict = {}
-        for cancelled_p in self.old_presets:
-            old_levels_dict.update(cancelled_p.displayable.get_current_levels())
-
-        new_levels_dict = {}
-        for new_p in self.new_presets:
-            new_levels_dict.update(new_p.displayable.get_first_levels())
-
-        for key, value in old_levels_dict.items():
-            if key not in new_levels_dict:
-                new_levels_dict[key] = 0
-
-        for key, value in new_levels_dict.items():
-            if key not in old_levels_dict:
-                old_levels_dict[key] = 0
-
-        old_levels = Levels(old_levels_dict)
-        new_levels = Levels(new_levels_dict)
-
-        return Fade([old_levels, new_levels], config.core.transition_duration, 1)
-
-    def as_dict(self):
-        dict_rep = super(TransitionPreset, self).as_dict()
-        dict_rep.pop('new_presets', 0)
-        dict_rep.pop('cancelled_presets', 0)
-        dict_rep.pop('combined_channels', 0)
-        dict_rep.pop('combined_name', 0)
-        return dict_rep
-

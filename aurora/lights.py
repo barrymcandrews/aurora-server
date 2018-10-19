@@ -2,7 +2,8 @@ from typing import List
 
 from aurora import hardware
 from aurora.configuration import Channel, Configuration
-from aurora.preset import Preset, TransitionPreset
+from aurora.preset import Preset
+from aurora.transition import TransitionPreset
 
 config: Configuration = Configuration()
 presets: List[Preset] = []
