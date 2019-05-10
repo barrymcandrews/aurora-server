@@ -40,8 +40,11 @@ class Configuration(object):
         def __init__(self, config: RawConfigParser):
             section = 'hardware'
             self.channels: List[Channel] = []
+            self.devices: List[str] = []
             self.channels_dict: Dict[int, Channel] = {}
             for json_pin in json.loads(config.get(section, 'channels')):
+                if json_pin['device'] not in self.devices:
+                    self.devices.append(json_pin['device'])
                 self.channels.append(Channel(json_pin))
                 self.channels_dict[int(json_pin['pin'])] = Channel(json_pin)
 
