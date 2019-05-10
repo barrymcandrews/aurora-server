@@ -42,6 +42,16 @@ async def get_channels(request: Request):
 
 
 # --------------------------------------------------------------- #
+# API Route: /devices
+# --------------------------------------------------------------- #
+
+@api.get('/devices')
+@doc.summary('Gets a list of devices registered with the server.')
+async def get_channels(request: Request):
+    return response.json(config.hardware.devices)
+
+
+# --------------------------------------------------------------- #
 # API Route: /presets
 # --------------------------------------------------------------- #
 
