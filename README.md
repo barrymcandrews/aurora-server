@@ -173,10 +173,10 @@ To get a list of all running presets on the server make a `GET` request to `/api
         "payload": {
             "type": "levels",
 	    	"levels": {
-            	"blue": 100,
+                "blue": 100,
             	"red": 0,
             	"green": 0
-	    	}
+            }
         }
     }
 ]
@@ -200,9 +200,9 @@ To create a new preset make a `POST` request to `/api/v2/presets`. For convience
             {
                 "type": "levels",
                 "levels": {
-					"red": 100,
-	                "green": 0,
-	                "blue": 50
+                    "red": 100,
+                    "green": 0,
+                    "blue": 50
                 }
             },
             {
@@ -211,17 +211,17 @@ To create a new preset make a `POST` request to `/api/v2/presets`. For convience
                     {
                         "type": "levels",
                         "levels": {
-							"red": 100,
-	                        "green": 100,
-	                        "blue": 50
+                            "red": 100,
+                            "green": 100,
+                            "blue": 50
                         }
                     },
                     {
                         "type": "levels",
                         "levels": {
-	                        "red": 0,
-	                        "green": 0,
-	                        "blue": 0
+                            "red": 0,
+                            "green": 0,
+                            "blue": 0
                         }
                     }
                 ]
