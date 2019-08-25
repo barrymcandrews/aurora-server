@@ -172,10 +172,10 @@ To get a list of all running presets on the server make a `GET` request to `/api
         ],
         "payload": {
             "type": "levels",
-	    	"levels": {
+            "levels": {
                 "blue": 100,
-            	"red": 0,
-            	"green": 0
+                "red": 0,
+                "green": 0
             }
         }
     }
@@ -190,10 +190,10 @@ To create a new preset make a `POST` request to `/api/v2/presets`. For convience
 
 ```json
 {
-	"name": "complicated-preset",
+    "name": "complicated-preset",
     "devices": [
-		"led-strip-1"
-	],
+        "led-strip-1"
+    ],
     "payload": {
         "type": "sequence",
         "children": [
@@ -251,9 +251,9 @@ Levels are solid colors. In a levels payload, you must provide channel labels an
 {
     "type": "levels",
     "levels": {
-    	"red": 0,
-    	"green": 0,
-    	"blue": 0
+        "red": 0,
+        "green": 0,
+        "blue": 0
     }
 }
 ```
@@ -269,17 +269,17 @@ Fades smoothly transition between two or more colors. In a fade payload, you mus
         {
             "type": "levels",
             "levels": {
-    		"red": 100,
-	    	"green": 0,
-	    	"blue": 0
+                "red": 100,
+                "green": 0,
+                "blue": 0
             }
         },
         {
             "type": "levels",
             "levels": {
-	    	"red": 0,
-	    	"green": 0,
-	    	"blue": 100
+                "red": 0,
+                "green": 0,
+                "blue": 100
             }
         }
     ]
@@ -297,25 +297,25 @@ Sequences are lists of other payloads. They display other payloads for a certain
         {
             "type": "levels",
             "levels": {
-	    	"red": 100,
-	    	"green": 0,
-	    	"blue": 0
+                "red": 100,
+                "green": 0,
+                "blue": 0
             }
         },
         {
             "type": "levels",
             "levels": {
-	    	"red": 0,
-	    	"green": 100,
-	    	"blue": 0
+                "red": 0,
+                "green": 100,
+                "blue": 0
             }
         },
         {
             "type": "levels",
             "levels": {
-	    	"red": 0,
-	    	"green": 0,
-	    	"blue": 100
+                "red": 0,
+                "green": 0,
+                "blue": 100
             }
         }
     ]
@@ -329,7 +329,7 @@ Visualizer payloads tell the server to display colors based on the music playing
 {
     "type": "visualizer",
     "visualizer": {
-    	"filter": "classic"
+        "filter": "classic"
     }
 }
 ```
