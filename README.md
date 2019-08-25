@@ -172,9 +172,11 @@ To get a list of all running presets on the server make a `GET` request to `/api
         ],
         "payload": {
             "type": "levels",
-            "blue": 100,
-            "red": 0,
-            "green": 0
+	    "levels": {
+            	"blue": 100,
+            	"red": 0,
+            	"green": 0
+	    }
         }
     }
 ]
@@ -326,6 +328,8 @@ Visualizer payloads tell the server to display colors based on the music playing
 ```json
 {
     "type": "visualizer",
-    "filter": "classic"
+    "visualizer": {
+    	"filter": "classic"
+    }
 }
 ```
