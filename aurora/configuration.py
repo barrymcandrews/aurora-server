@@ -11,7 +11,6 @@ else:
 
 
 class Configuration(object):
-
     class Core(object):
         def __init__(self, config: RawConfigParser):
             section = 'core'
@@ -33,7 +32,7 @@ class Configuration(object):
  /  /     ___  |  |__|  |       \  \  |  |__|  |      \  \   /  /     ___ 
 /__/      \__\ \________/        \__\ \________/       \__\ /__/      \__\ 
 
-           --     Light Server     --     Version 2.3.0     --
+           --     Light Server     --     Version 2.5.0     --
 """
 
     class Hardware(object):
