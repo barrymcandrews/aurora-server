@@ -214,7 +214,7 @@ def factory(p: Dict[str, any], nested=False) -> Displayable:
             return Sequence(items, payload['delay'], repeats)
 
         elif disp_type == 'visualizer':
-            return VisualizerPreset(payload)
+            return VisualizerPreset(payload['visualizer'])
 
     except KeyError:
         raise InvalidUsage('Preset payload format is invalid.')
