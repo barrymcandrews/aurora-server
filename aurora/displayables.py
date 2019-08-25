@@ -195,13 +195,13 @@ def factory(p: Dict[str, any], nested=False) -> Displayable:
         repeats = p['repeats'] if 'repeats' in p else repeats
 
         disp_type = payload['type'].lower()
-        payload.pop('type', 0)
+
         if disp_type == 'levels':
-            return Levels(payload)
+            return Levels(payload['levels'])
 
         elif disp_type == 'fade':
             items: List[Levels] = []
-            for sub in payload['levels']:
+            for sub in payload['children']:
                 sub_disp = factory(sub, True)
                 if type(sub_disp) is Levels:
                     items.append(sub_disp)
@@ -209,7 +209,7 @@ def factory(p: Dict[str, any], nested=False) -> Displayable:
 
         elif disp_type == 'sequence':
             items: List[Displayable] = []
-            for sub in payload['sequence']:
+            for sub in payload['children']:
                 items.append(factory(sub, True))
             return Sequence(items, payload['delay'], repeats)
 

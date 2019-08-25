@@ -194,27 +194,33 @@ To create a new preset make a `POST` request to `/api/v2/presets`. For convience
         ],
     "payload": {
         "type": "sequence",
-        "sequence": [
+        "children": [
             {
                 "type": "levels",
-                "red": 100,
-                "green": 0,
-                "blue": 50
+                "levels": {
+	                "red": 100,
+	                "green": 0,
+	                "blue": 50
+                }
             },
             {
                 "type": "fade",
-                "levels": [
+                "children": [
                     {
                         "type": "levels",
-                        "red": 100,
-                        "green": 100,
-                        "blue": 50
+                        "levels": {
+	                        "red": 100,
+	                        "green": 100,
+	                        "blue": 50
+                        }
                     },
                     {
                         "type": "levels",
-                        "red": 0,
-                        "green": 0,
-                        "blue": 0
+                        "levels": {
+	                        "red": 0,
+	                        "green": 0,
+	                        "blue": 0
+                        }
                     }
                 ]
             }
@@ -242,9 +248,11 @@ Levels are solid colors. In a levels payload, you must provide channel labels an
 ```json
 {
     "type": "levels",
-    "red": 0,
-    "green": 0,
-    "blue": 0
+    "levels": {
+	    "red": 0,
+	    "green": 0,
+	    "blue": 0
+    }
 }
 ```
 
@@ -255,18 +263,22 @@ Fades smoothly transition between two or more colors. In a fade payload, you mus
 {
     "type": "fade",
     "delay": 5,
-    "levels": [
+    "children": [
         {
             "type": "levels",
-            "red": 100,
-            "green": 0,
-            "blue": 0
+            "levels": {
+	            "red": 100,
+	            "green": 0,
+	            "blue": 0
+            }
         },
         {
             "type": "levels",
-            "red": 0,
-            "green": 0,
-            "blue": 100
+            "levels": {
+	            "red": 0,
+	            "green": 0,
+	            "blue": 100
+            }
         }
     ]
 }
@@ -279,24 +291,30 @@ Sequences are lists of other payloads. They display other payloads for a certain
 {
    "type": "sequence",
    "delay": 1,
-   "sequence": [
+   "children": [
         {
             "type": "levels",
-            "red": 100,
-            "green": 0,
-            "blue": 0
+            "levels": {
+	            "red": 100,
+	            "green": 0,
+	            "blue": 0
+            }
         },
         {
             "type": "levels",
-            "red": 0,
-            "green": 100,
-            "blue": 0
+            "levels": {
+	            "red": 0,
+	            "green": 100,
+	            "blue": 0
+            }
         },
         {
             "type": "levels",
-            "red": 0,
-            "green": 0,
-            "blue": 100
+            "levels": {
+	            "red": 0,
+	            "green": 0,
+	            "blue": 100
+            }
         }
     ]
 }
